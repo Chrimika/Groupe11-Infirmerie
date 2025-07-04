@@ -11,9 +11,11 @@ public class Medecin {
     private String email;
     private Set<String> joursTravail;
     private boolean estActif;
+    private String motDePasse;
 
     // Constructeurs
-    public Medecin() {}
+    public Medecin() {
+    }
 
     public Medecin(String nom, String prenom, String specialite) {
         this.nom = nom;
@@ -85,5 +87,13 @@ public class Medecin {
 
     public void setEstActif(boolean estActif) {
         this.estActif = estActif;
+    }
+
+    public String getMotDePasse() {
+        return motDePasse;
+    }
+
+    public void setMotDePasse(String motDePasse) {
+        this.motDePasse = motDePasse;
     }
 }

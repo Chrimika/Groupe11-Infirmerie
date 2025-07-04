@@ -1,16 +1,16 @@
 import javafx.application.Application;
 import javafx.stage.Stage;
-import views.*;
+import views.LandingPage;
 
 public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
         try {
-            // ChoiceInscriptionView est une Scene, on peut l'utiliser directement
-            //ChoiceInscriptionView choiceScene = new ChoiceInscriptionView(primaryStage);
-            AppointmentManagement choiceScene = new AppointmentManagement();
-            primaryStage.setScene(choiceScene);
+            LandingPage landingPage = new LandingPage();
+            primaryStage.setScene(landingPage);
             primaryStage.setTitle("Infirmerie Scolaire");
+            primaryStage.setMinWidth(800);
+            primaryStage.setMinHeight(600);
             primaryStage.show();
         } catch (Exception e) {
             e.printStackTrace();

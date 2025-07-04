@@ -1,5 +1,8 @@
 package views;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 import javafx.animation.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -41,8 +44,7 @@ public class LandingPage extends Scene {
                 0, 0, 0, 1, true, CycleMethod.NO_CYCLE,
                 new Stop(0, Color.web("#0bcb95")),
                 new Stop(0.5, Color.web("#0aa884")),
-                new Stop(1, Color.web("#088773"))
-        );
+                new Stop(1, Color.web("#088773")));
 
         Rectangle background = new Rectangle(800, 600);
         background.setFill(gradient);
@@ -108,17 +110,24 @@ public class LandingPage extends Scene {
         logoView = new ImageView();
 
         try {
-            Image logo = new Image(getClass().getResourceAsStream("/assets/Piol.png"));
+            // Chemin CORRECT (supposant que Piol.png est dans src/main/resources/assets)
+            InputStream stream = getClass().getResourceAsStream("/assets/Piol.png");
+
+            if (stream == null) {
+                throw new IOException("Resource not found! Check path: /assets/Piol.png");
+            }
+
+            Image logo = new Image("assets/Piol.png");
             logoView.setImage(logo);
             logoView.setFitWidth(500);
             logoView.setFitHeight(350);
             logoView.setPreserveRatio(true);
         } catch (Exception e) {
             System.err.println("Erreur de chargement du logo: " + e.getMessage());
-            logoView = createModernPlaceholder(200, 200);
+            logoView = createModernPlaceholder(200, 200); // Assurez-vous que cette méthode existe
         }
 
-        // Effet d'ombre portée
+        // ... (le reste de votre code avec les effets reste inchangé)
         DropShadow logoShadow = new DropShadow();
         logoShadow.setColor(Color.rgb(0, 0, 0, 0.3));
         logoShadow.setRadius(15);
@@ -126,7 +135,6 @@ public class LandingPage extends Scene {
         logoShadow.setOffsetY(8);
         logoView.setEffect(logoShadow);
 
-        // Effet de hover
         logoView.setOnMouseEntered(e -> {
             ScaleTransition scale = new ScaleTransition(Duration.millis(200), logoView);
             scale.setToX(1.1);
@@ -148,8 +156,7 @@ public class LandingPage extends Scene {
                 "-fx-text-fill: white; " +
                         "-fx-font-size: 36px; " +
                         "-fx-font-weight: bold; " +
-                        "-fx-font-family: 'Arial', sans-serif;"
-        );
+                        "-fx-font-family: 'Arial', sans-serif;");
 
         // Effet d'ombre sur le texte
         DropShadow textShadow = new DropShadow();
@@ -165,8 +172,7 @@ public class LandingPage extends Scene {
         subtitle.setStyle(
                 "-fx-text-fill: rgba(255, 255, 255, 0.9); " +
                         "-fx-font-size: 16px; " +
-                        "-fx-font-style: italic;"
-        );
+                        "-fx-font-style: italic;");
         subtitle.setMaxWidth(400);
         subtitle.setWrapText(true);
         subtitle.setAlignment(Pos.CENTER);
@@ -181,8 +187,7 @@ public class LandingPage extends Scene {
                         "-fx-font-weight: bold; " +
                         "-fx-padding: 15 40 15 40; " +
                         "-fx-background-radius: 25; " +
-                        "-fx-cursor: hand;"
-        );
+                        "-fx-cursor: hand;");
 
         // Effet d'ombre sur le bouton
         DropShadow buttonShadow = new DropShadow();
@@ -207,8 +212,7 @@ public class LandingPage extends Scene {
                             "-fx-font-weight: bold; " +
                             "-fx-padding: 15 40 15 40; " +
                             "-fx-background-radius: 25; " +
-                            "-fx-cursor: hand;"
-            );
+                            "-fx-cursor: hand;");
 
             ScaleTransition scale = new ScaleTransition(Duration.millis(150), loginBtn);
             scale.setToX(1.05);
@@ -224,8 +228,7 @@ public class LandingPage extends Scene {
                             "-fx-font-weight: bold; " +
                             "-fx-padding: 15 40 15 40; " +
                             "-fx-background-radius: 25; " +
-                            "-fx-cursor: hand;"
-            );
+                            "-fx-cursor: hand;");
 
             ScaleTransition scale = new ScaleTransition(Duration.millis(150), loginBtn);
             scale.setToX(1.0);
@@ -337,8 +340,7 @@ public class LandingPage extends Scene {
                 new PauseTransition(Duration.millis(100)),
                 subtitleEntry,
                 new PauseTransition(Duration.millis(100)),
-                buttonEntry
-        );
+                buttonEntry);
 
         sequence.setOnFinished(e -> logoPulse.play());
         sequence.play();

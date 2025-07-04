@@ -4,6 +4,7 @@ import javafx.animation.*;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.image.Image;
@@ -17,12 +18,16 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import models.Medecin;
+import utils.DBConnection;
 
+import java.security.MessageDigest;
+import java.sql.*;
 import java.util.HashSet;
 import java.util.Set;
 
 public class MedecinSignUp extends Scene {
     private TextField nomField, prenomField, specialiteField, telField, emailField;
+    private PasswordField passwordField;
     private ToggleButton lundiBtn, mardiBtn, mercrediBtn, jeudiBtn, vendrediBtn, samediBtn;
     private CheckBox estActifCheck;
     private Button submitBtn;
@@ -44,8 +49,7 @@ public class MedecinSignUp extends Scene {
                 0, 0, 1, 1, true, CycleMethod.NO_CYCLE,
                 new Stop(0, Color.web("#f1f3f4")),
                 new Stop(0.5, Color.web("#e8eaed")),
-                new Stop(1, Color.web("#dadce0"))
-        );
+                new Stop(1, Color.web("#dadce0")));
 
         Rectangle background = new Rectangle(1000, 700);
         background.setFill(gradient);
@@ -89,10 +93,10 @@ public class MedecinSignUp extends Scene {
         VBox cross = new VBox();
         cross.setAlignment(Pos.CENTER);
 
-        Rectangle vertical = new Rectangle(size/3, size);
+        Rectangle vertical = new Rectangle(size / 3, size);
         vertical.setFill(Color.web("#0bcb95"));
 
-        Rectangle horizontal = new Rectangle(size, size/3);
+        Rectangle horizontal = new Rectangle(size, size / 3);
         horizontal.setFill(Color.web("#0bcb95"));
 
         StackPane crossShape = new StackPane();
@@ -128,15 +132,13 @@ public class MedecinSignUp extends Scene {
         welcomeTitle.setStyle(
                 "-fx-text-fill: #0bcb95; " +
                         "-fx-font-size: 28px; " +
-                        "-fx-font-weight: bold;"
-        );
+                        "-fx-font-weight: bold;");
 
         Label welcomeSubtitle = new Label("Rejoignez notre équipe médicale et contribuez à la santé de nos patients");
         welcomeSubtitle.setStyle(
                 "-fx-text-fill: #6c757d; " +
                         "-fx-font-size: 14px; " +
-                        "-fx-text-alignment: center;"
-        );
+                        "-fx-text-alignment: center;");
         welcomeSubtitle.setWrapText(true);
         welcomeSubtitle.setMaxWidth(280);
 
@@ -196,8 +198,7 @@ public class MedecinSignUp extends Scene {
         formTitle.setStyle(
                 "-fx-text-fill: #212529; " +
                         "-fx-font-size: 24px; " +
-                        "-fx-font-weight: bold;"
-        );
+                        "-fx-font-weight: bold;");
 
         // Bouton Retour
         Button backButton = new Button("Retour");
@@ -208,8 +209,7 @@ public class MedecinSignUp extends Scene {
                         "-fx-font-weight: bold; " +
                         "-fx-padding: 10 20; " +
                         "-fx-background-radius: 5; " +
-                        "-fx-cursor: hand;"
-        );
+                        "-fx-cursor: hand;");
         backButton.setOnAction(e -> {
             Stage stage = (Stage) getWindow();
             stage.setScene(new ChoiceInscriptionView(stage));
@@ -236,8 +236,7 @@ public class MedecinSignUp extends Scene {
         formContainer.setStyle(
                 "-fx-background-color: white; " +
                         "-fx-background-radius: 15; " +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);"
-        );
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);");
 
         // Section 1: Informations professionnelles
         VBox professionalSection = createFormSection("Informations Professionnelles", createProfessionalFields());
@@ -254,7 +253,8 @@ public class MedecinSignUp extends Scene {
         // Bouton de soumission
         setupSubmitButton();
 
-        formContainer.getChildren().addAll(professionalSection, contactSection, scheduleSection, statusSection, submitBtn);
+        formContainer.getChildren().addAll(professionalSection, contactSection, scheduleSection, statusSection,
+                submitBtn);
         return formContainer;
     }
 
@@ -265,8 +265,7 @@ public class MedecinSignUp extends Scene {
         sectionTitle.setStyle(
                 "-fx-text-fill: #0bcb95; " +
                         "-fx-font-size: 16px; " +
-                        "-fx-font-weight: bold;"
-        );
+                        "-fx-font-weight: bold;");
 
         section.getChildren().addAll(sectionTitle, fields);
         return section;
@@ -282,8 +281,7 @@ public class MedecinSignUp extends Scene {
         fields.getChildren().addAll(
                 createFieldWithLabel("Nom *", nomField),
                 createFieldWithLabel("Prénom *", prenomField),
-                createFieldWithLabel("Spécialité *", specialiteField)
-        );
+                createFieldWithLabel("Spécialité *", specialiteField));
 
         return fields;
     }
@@ -293,13 +291,58 @@ public class MedecinSignUp extends Scene {
 
         telField = createStyledTextField("Téléphone");
         emailField = createStyledTextField("Email");
+        passwordField = createStyledPasswordField("Mot de passe");
+
+        // Barre de progression pour la force du mot de passe
+        ProgressBar passwordStrength = new ProgressBar(0);
+        passwordStrength.setPrefWidth(200);
+        passwordStrength.setStyle("-fx-accent: #ff0000;");
+
+        passwordField.textProperty().addListener((obs, oldVal, newVal) -> {
+            double strength = calculatePasswordStrength(newVal);
+            passwordStrength.setProgress(strength);
+
+            // Changer la couleur en fonction de la force
+            if (strength < 0.4)
+                passwordStrength.setStyle("-fx-accent: #ff0000;");
+            else if (strength < 0.7)
+                passwordStrength.setStyle("-fx-accent: #ff9900;");
+            else
+                passwordStrength.setStyle("-fx-accent: #00cc00;");
+        });
+
+        HBox passwordContainer = new HBox(10, passwordField, passwordStrength);
+        passwordContainer.setAlignment(Pos.CENTER_LEFT);
 
         fields.getChildren().addAll(
                 createFieldWithLabel("Téléphone", telField),
-                createFieldWithLabel("Email", emailField)
-        );
+                createFieldWithLabel("Email", emailField),
+                createFieldWithLabel("Mot de passe *", passwordContainer));
 
         return fields;
+    }
+
+    private double calculatePasswordStrength(String password) {
+        int length = password.length();
+        if (length == 0)
+            return 0;
+
+        double strength = length / 12.0;
+        if (password.matches(".*[A-Z].*"))
+            strength += 0.2;
+        if (password.matches(".*[0-9].*"))
+            strength += 0.2;
+        if (password.matches(".*[^A-Za-z0-9].*"))
+            strength += 0.2;
+
+        return Math.min(1.0, strength);
+    }
+
+    private PasswordField createStyledPasswordField(String promptText) {
+        PasswordField field = new PasswordField();
+        field.setPromptText(promptText);
+        styleControl(field);
+        return field;
     }
 
     private VBox createScheduleFields() {
@@ -346,8 +389,7 @@ public class MedecinSignUp extends Scene {
                         "-fx-text-fill: #6c757d; " +
                         "-fx-font-size: 12px; " +
                         "-fx-font-weight: bold; " +
-                        "-fx-cursor: hand;"
-        );
+                        "-fx-cursor: hand;");
 
         // Tooltip pour le nom complet
         dayBtn.setTooltip(new Tooltip(fullName));
@@ -364,8 +406,7 @@ public class MedecinSignUp extends Scene {
                                 "-fx-text-fill: white; " +
                                 "-fx-font-size: 12px; " +
                                 "-fx-font-weight: bold; " +
-                                "-fx-cursor: hand;"
-                );
+                                "-fx-cursor: hand;");
 
                 // Animation de sélection
                 ScaleTransition scale = new ScaleTransition(Duration.millis(150), dayBtn);
@@ -386,8 +427,7 @@ public class MedecinSignUp extends Scene {
                                 "-fx-text-fill: #6c757d; " +
                                 "-fx-font-size: 12px; " +
                                 "-fx-font-weight: bold; " +
-                                "-fx-cursor: hand;"
-                );
+                                "-fx-cursor: hand;");
             }
         });
 
@@ -403,8 +443,7 @@ public class MedecinSignUp extends Scene {
                                 "-fx-text-fill: #0bcb95; " +
                                 "-fx-font-size: 12px; " +
                                 "-fx-font-weight: bold; " +
-                                "-fx-cursor: hand;"
-                );
+                                "-fx-cursor: hand;");
             }
         });
 
@@ -419,8 +458,7 @@ public class MedecinSignUp extends Scene {
                                 "-fx-text-fill: #6c757d; " +
                                 "-fx-font-size: 12px; " +
                                 "-fx-font-weight: bold; " +
-                                "-fx-cursor: hand;"
-                );
+                                "-fx-cursor: hand;");
             }
         });
 
@@ -435,14 +473,14 @@ public class MedecinSignUp extends Scene {
         estActifCheck.setStyle(
                 "-fx-text-fill: #495057; " +
                         "-fx-font-size: 14px; " +
-                        "-fx-font-weight: 500;"
-        );
+                        "-fx-font-weight: 500;");
 
         fields.getChildren().add(estActifCheck);
         return fields;
     }
 
-    private VBox createFieldWithLabel(String labelText, Control field) {
+    // CORRECTION: Changement de Control à Node
+    private VBox createFieldWithLabel(String labelText, Node field) {
         VBox fieldContainer = new VBox(5);
 
         Label label = new Label(labelText);
@@ -467,8 +505,7 @@ public class MedecinSignUp extends Scene {
                         "-fx-border-radius: 8; " +
                         "-fx-background-radius: 8; " +
                         "-fx-padding: 10; " +
-                        "-fx-font-size: 14px;"
-        );
+                        "-fx-font-size: 14px;");
 
         // Effet focus
         control.focusedProperty().addListener((obs, oldVal, newVal) -> {
@@ -480,8 +517,7 @@ public class MedecinSignUp extends Scene {
                                 "-fx-border-radius: 8; " +
                                 "-fx-background-radius: 8; " +
                                 "-fx-padding: 10; " +
-                                "-fx-font-size: 14px;"
-                );
+                                "-fx-font-size: 14px;");
             } else {
                 control.setStyle(
                         "-fx-background-color: #f8f9fa; " +
@@ -490,8 +526,7 @@ public class MedecinSignUp extends Scene {
                                 "-fx-border-radius: 8; " +
                                 "-fx-background-radius: 8; " +
                                 "-fx-padding: 10; " +
-                                "-fx-font-size: 14px;"
-                );
+                                "-fx-font-size: 14px;");
             }
         });
     }
@@ -505,8 +540,7 @@ public class MedecinSignUp extends Scene {
                         "-fx-font-weight: bold; " +
                         "-fx-padding: 15 30 15 30; " +
                         "-fx-background-radius: 25; " +
-                        "-fx-cursor: hand;"
-        );
+                        "-fx-cursor: hand;");
 
         submitBtn.setMaxWidth(Double.MAX_VALUE);
 
@@ -527,8 +561,7 @@ public class MedecinSignUp extends Scene {
                             "-fx-font-weight: bold; " +
                             "-fx-padding: 15 30 15 30; " +
                             "-fx-background-radius: 25; " +
-                            "-fx-cursor: hand;"
-            );
+                            "-fx-cursor: hand;");
 
             ScaleTransition scale = new ScaleTransition(Duration.millis(150), submitBtn);
             scale.setToX(1.02);
@@ -544,8 +577,7 @@ public class MedecinSignUp extends Scene {
                             "-fx-font-weight: bold; " +
                             "-fx-padding: 15 30 15 30; " +
                             "-fx-background-radius: 25; " +
-                            "-fx-cursor: hand;"
-            );
+                            "-fx-cursor: hand;");
 
             ScaleTransition scale = new ScaleTransition(Duration.millis(150), submitBtn);
             scale.setToX(1.0);
@@ -556,8 +588,20 @@ public class MedecinSignUp extends Scene {
         submitBtn.setOnAction(e -> {
             if (validateForm()) {
                 Medecin medecin = createMedecin();
-                showSuccessAnimation();
-                showSuccessAlert(medecin);
+                try {
+                    // Enregistrement dans la base de données
+                    int medecinId = saveMedecinToDatabase(medecin);
+                    if (medecinId > 0) {
+                        savePlanningToDatabase(medecinId, medecin.getJoursTravail());
+                        showSuccessAnimation();
+                        showSuccessAlert(medecin);
+                    } else {
+                        showAlert("Erreur", "Échec de l'enregistrement du médecin.");
+                    }
+                } catch (SQLException ex) {
+                    ex.printStackTrace();
+                    showAlert("Erreur SQL", "Erreur lors de l'accès à la base de données: " + ex.getMessage());
+                }
             } else {
                 showValidationError();
             }
@@ -593,10 +637,15 @@ public class MedecinSignUp extends Scene {
                 mercrediBtn.isSelected() || jeudiBtn.isSelected() ||
                 vendrediBtn.isSelected() || samediBtn.isSelected();
 
+        // Validation corrigée du mot de passe
+        String password = passwordField.getText().trim();
+        boolean passwordValid = !password.isEmpty() && password.length() >= 6;
+
         return !nomField.getText().trim().isEmpty() &&
                 !prenomField.getText().trim().isEmpty() &&
                 !specialiteField.getText().trim().isEmpty() &&
-                joursSelected;
+                joursSelected &&
+                passwordValid;
     }
 
     private void showValidationError() {
@@ -616,8 +665,7 @@ public class MedecinSignUp extends Scene {
                         "-fx-font-weight: bold; " +
                         "-fx-padding: 15 30 15 30; " +
                         "-fx-background-radius: 25; " +
-                        "-fx-cursor: hand;"
-        );
+                        "-fx-cursor: hand;");
 
         Timeline resetColor = new Timeline(new KeyFrame(Duration.seconds(2), e -> {
             submitBtn.setStyle(
@@ -627,12 +675,15 @@ public class MedecinSignUp extends Scene {
                             "-fx-font-weight: bold; " +
                             "-fx-padding: 15 30 15 30; " +
                             "-fx-background-radius: 25; " +
-                            "-fx-cursor: hand;"
-            );
+                            "-fx-cursor: hand;");
         }));
         resetColor.play();
 
-        showAlert("Champs obligatoires", "Veuillez remplir tous les champs obligatoires (*) et sélectionner au moins un jour de travail.");
+        // Message d'erreur amélioré
+        showAlert("Champs obligatoires",
+                "Veuillez remplir tous les champs obligatoires (*), \n" +
+                        "sélectionner au moins un jour de travail, \n" +
+                        "et utiliser un mot de passe d'au moins 6 caractères.");
     }
 
     private void showSuccessAnimation() {
@@ -654,14 +705,21 @@ public class MedecinSignUp extends Scene {
         medecin.setSpecialite(specialiteField.getText().trim());
         medecin.setTelephone(telField.getText().trim());
         medecin.setEmail(emailField.getText().trim());
+        medecin.setMotDePasse(passwordField.getText().trim());
 
         Set<String> joursTravail = new HashSet<>();
-        if (lundiBtn.isSelected()) joursTravail.add("Lundi");
-        if (mardiBtn.isSelected()) joursTravail.add("Mardi");
-        if (mercrediBtn.isSelected()) joursTravail.add("Mercredi");
-        if (jeudiBtn.isSelected()) joursTravail.add("Jeudi");
-        if (vendrediBtn.isSelected()) joursTravail.add("Vendredi");
-        if (samediBtn.isSelected()) joursTravail.add("Samedi");
+        if (lundiBtn.isSelected())
+            joursTravail.add("Lundi");
+        if (mardiBtn.isSelected())
+            joursTravail.add("Mardi");
+        if (mercrediBtn.isSelected())
+            joursTravail.add("Mercredi");
+        if (jeudiBtn.isSelected())
+            joursTravail.add("Jeudi");
+        if (vendrediBtn.isSelected())
+            joursTravail.add("Vendredi");
+        if (samediBtn.isSelected())
+            joursTravail.add("Samedi");
 
         medecin.setJoursTravail(joursTravail);
         medecin.setEstActif(estActifCheck.isSelected());
@@ -685,5 +743,120 @@ public class MedecinSignUp extends Scene {
         alert.setHeaderText(null);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    // CORRECTION: Requête SQL fixée et syntaxe des paramètres réparée
+    private int saveMedecinToDatabase(Medecin medecin) throws SQLException {
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false); // Démarrer une transaction
+
+            // 1. Insertion dans la table medecin
+            String sqlMedecin = "INSERT INTO medecin (nom, prenom, specialite, telephone, email, est_actif, mot_passe) "
+                    +
+                    "VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+            String hashedPassword = hashPassword(medecin.getMotDePasse());
+            if (hashedPassword.length() > 45) {
+                hashedPassword = hashedPassword.substring(0, 45);
+            }
+
+            int medecinId = -1;
+            try (PreparedStatement stmtMedecin = conn.prepareStatement(sqlMedecin, Statement.RETURN_GENERATED_KEYS)) {
+                stmtMedecin.setString(1, medecin.getNom());
+                stmtMedecin.setString(2, medecin.getPrenom());
+                stmtMedecin.setString(3, medecin.getSpecialite());
+                stmtMedecin.setString(4, medecin.getTelephone());
+                stmtMedecin.setString(5, medecin.getEmail());
+                stmtMedecin.setBoolean(6, medecin.isEstActif());
+                stmtMedecin.setString(7, hashedPassword);
+
+                int affectedRows = stmtMedecin.executeUpdate();
+                if (affectedRows > 0) {
+                    try (ResultSet rs = stmtMedecin.getGeneratedKeys()) {
+                        if (rs.next()) {
+                            medecinId = rs.getInt(1);
+                        }
+                    }
+                }
+            }
+
+            if (medecinId > 0) {
+                // 2. Insertion dans la table utilisateur
+                String sqlUser = "INSERT INTO utilisateur (email, mot_de_passe, role) VALUES (?, ?, ?)";
+                try (PreparedStatement stmtUser = conn.prepareStatement(sqlUser)) {
+                    stmtUser.setString(1, medecin.getEmail());
+                    stmtUser.setString(2, hashedPassword); // Même mot de passe haché
+                    stmtUser.setString(3, "medecin"); // Rôle spécifique
+                    stmtUser.executeUpdate();
+                }
+
+                // 3. Sauvegarde du planning
+                savePlanningToDatabase(conn, medecinId, medecin.getJoursTravail());
+            }
+
+            conn.commit(); // Valider la transaction
+            return medecinId;
+        } catch (SQLException e) {
+            if (conn != null) {
+                conn.rollback(); // Annuler en cas d'erreur
+            }
+            throw e;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true); // Rétablir le mode auto-commit
+                    conn.close();
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    // Mise à jour de la méthode savePlanningToDatabase pour accepter une connexion
+    private void savePlanningToDatabase(Connection conn, int medecinId, Set<String> joursTravail) throws SQLException {
+        String sql = "INSERT INTO planning (medecin_id, jour) VALUES (?, ?)";
+        try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+            for (String jour : joursTravail) {
+                stmt.setInt(1, medecinId);
+                stmt.setString(2, jour);
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+        }
+    }
+
+    // Méthode de hachage SHA-256 pour sécuriser les mots de passe
+    private String hashPassword(String password) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hashedBytes = md.digest(password.getBytes());
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hashedBytes) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return password; // Fallback (non sécurisé)
+        }
+    }
+
+    // Méthode pour sauvegarder le planning dans la table 'planning'
+    private void savePlanningToDatabase(int medecinId, Set<String> joursTravail) throws SQLException {
+        String sql = "INSERT INTO planning (medecin_id, jour) VALUES (?, ?)";
+
+        try (Connection conn = DBConnection.getConnection();
+                PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            for (String jour : joursTravail) {
+                stmt.setInt(1, medecinId);
+                stmt.setString(2, jour);
+                stmt.addBatch();
+            }
+            stmt.executeBatch();
+        }
     }
 }

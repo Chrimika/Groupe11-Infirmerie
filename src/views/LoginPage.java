@@ -25,10 +25,13 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import services.AuthService;
 
 public class LoginPage extends Scene {
+    private Label errorLabel;
     private VBox loginForm;
     private ImageView loginImage;
+    private Button loginButton;
 
     public LoginPage() {
         super(new StackPane(), 800, 600);
@@ -61,8 +64,7 @@ public class LoginPage extends Scene {
                 0, 0, 1, 1, true, null,
                 new Stop(0, Color.web("#0bcb95")),
                 new Stop(0.7, Color.web("#7dd3c0")),
-                new Stop(1, Color.web("#ffffff"))
-        );
+                new Stop(1, Color.web("#ffffff")));
         background.setFill(gradient);
 
         // Effet de flou pour le fond
@@ -85,8 +87,7 @@ public class LoginPage extends Scene {
                         "-fx-background-radius: 20;" +
                         "-fx-border-radius: 20;" +
                         "-fx-border-color: rgba(255, 255, 255, 0.2);" +
-                        "-fx-border-width: 1;"
-        );
+                        "-fx-border-width: 1;");
 
         // Ombre portée élégante
         DropShadow shadow = new DropShadow();
@@ -105,8 +106,7 @@ public class LoginPage extends Scene {
         imageSection.setPrefSize(450, 550);
         imageSection.setStyle(
                 "-fx-background-color: rgba(255, 255, 255, 0.05);" +
-                        "-fx-background-radius: 20 0 0 20;"
-        );
+                        "-fx-background-radius: 20 0 0 20;");
 
         try {
             // Image de connexion
@@ -155,9 +155,13 @@ public class LoginPage extends Scene {
         // Champs de saisie modernes
         TextField username = createModernTextField("Nom d'utilisateur", "👤");
         PasswordField password = createModernPasswordField("Mot de passe", "🔒");
+        errorLabel = new Label();
+        errorLabel.setTextFill(Color.RED);
+        errorLabel.setFont(Font.font("Segoe UI", 12));
 
         // Bouton de connexion avec animation
         Button loginButton = createModernButton("Se connecter");
+        loginButton.setOnAction(e -> handleLogin(username.getText(), password.getText()));
 
         // Texte et bouton pour inscription
         Label noAccountLabel = new Label("Pas encore de compte ?");
@@ -182,12 +186,43 @@ public class LoginPage extends Scene {
         loginForm.getChildren().addAll(
                 new VBox(5, title, subtitle),
                 new VBox(20, username, password),
+                errorLabel,
                 loginButton,
-                signUpSection
-        );
+                signUpSection);
 
         formSection.getChildren().add(loginForm);
         return formSection;
+    }
+
+    private void handleLogin(String email, String password) {
+        if (email.isEmpty() || password.isEmpty()) {
+            errorLabel.setText("Veuillez remplir tous les champs");
+            return;
+        }
+
+        String role = AuthService.getRoleByEmail(email);
+
+        if (role == null) {
+            errorLabel.setText("Email ou mot de passe incorrect");
+            return;
+        }
+
+        Stage stage = (Stage) loginButton.getScene().getWindow();
+
+        switch (role.toUpperCase()) {
+            case "SECRETAIRE":
+                stage.setScene(new AppointmentManagement());
+                break;
+            case "MEDECIN":
+                stage.setScene(new DoctorInterface());
+                break;
+            case "PATIENT":
+                // stage.setScene(new PatientInterface()); // À implémenter
+                errorLabel.setText("Interface patient non disponible");
+                break;
+            default:
+                errorLabel.setText("Rôle non reconnu");
+        }
     }
 
     private TextField createModernTextField(String placeholder, String icon) {
@@ -204,8 +239,7 @@ public class LoginPage extends Scene {
                         "-fx-background-radius: 10;" +
                         "-fx-padding: 0 20 0 20;" +
                         "-fx-text-fill: #2c3e50;" +
-                        "-fx-prompt-text-fill: #95a5a6;"
-        );
+                        "-fx-prompt-text-fill: #95a5a6;");
 
         // Effet de focus
         field.focusedProperty().addListener((obs, oldVal, newVal) -> {
@@ -219,8 +253,7 @@ public class LoginPage extends Scene {
                                 "-fx-padding: 0 20 0 20;" +
                                 "-fx-text-fill: #2c3e50;" +
                                 "-fx-prompt-text-fill: #95a5a6;" +
-                                "-fx-effect: dropshadow(gaussian, rgba(11, 203, 149, 0.3), 10, 0, 0, 0);"
-                );
+                                "-fx-effect: dropshadow(gaussian, rgba(11, 203, 149, 0.3), 10, 0, 0, 0);");
             } else {
                 field.setStyle(
                         "-fx-background-color: #f8f9fa;" +
@@ -230,8 +263,7 @@ public class LoginPage extends Scene {
                                 "-fx-background-radius: 10;" +
                                 "-fx-padding: 0 20 0 20;" +
                                 "-fx-text-fill: #2c3e50;" +
-                                "-fx-prompt-text-fill: #95a5a6;"
-                );
+                                "-fx-prompt-text-fill: #95a5a6;");
             }
         });
 
@@ -252,8 +284,7 @@ public class LoginPage extends Scene {
                         "-fx-background-radius: 10;" +
                         "-fx-padding: 0 20 0 20;" +
                         "-fx-text-fill: #2c3e50;" +
-                        "-fx-prompt-text-fill: #95a5a6;"
-        );
+                        "-fx-prompt-text-fill: #95a5a6;");
 
         // Effet de focus identique au TextField
         field.focusedProperty().addListener((obs, oldVal, newVal) -> {
@@ -267,8 +298,7 @@ public class LoginPage extends Scene {
                                 "-fx-padding: 0 20 0 20;" +
                                 "-fx-text-fill: #2c3e50;" +
                                 "-fx-prompt-text-fill: #95a5a6;" +
-                                "-fx-effect: dropshadow(gaussian, rgba(11, 203, 149, 0.3), 10, 0, 0, 0);"
-                );
+                                "-fx-effect: dropshadow(gaussian, rgba(11, 203, 149, 0.3), 10, 0, 0, 0);");
             } else {
                 field.setStyle(
                         "-fx-background-color: #f8f9fa;" +
@@ -278,8 +308,7 @@ public class LoginPage extends Scene {
                                 "-fx-background-radius: 10;" +
                                 "-fx-padding: 0 20 0 20;" +
                                 "-fx-text-fill: #2c3e50;" +
-                                "-fx-prompt-text-fill: #95a5a6;"
-                );
+                                "-fx-prompt-text-fill: #95a5a6;");
             }
         });
 
@@ -298,8 +327,7 @@ public class LoginPage extends Scene {
                         "-fx-background-radius: 25;" +
                         "-fx-border-radius: 25;" +
                         "-fx-cursor: hand;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 8, 0, 0, 2);"
-        );
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 8, 0, 0, 2);");
 
         // Animations sur hover et clic
         button.setOnMouseEntered(e -> {
@@ -314,8 +342,7 @@ public class LoginPage extends Scene {
                             "-fx-background-radius: 25;" +
                             "-fx-border-radius: 25;" +
                             "-fx-cursor: hand;" +
-                            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 12, 0, 0, 4);"
-            );
+                            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 12, 0, 0, 4);");
         });
 
         button.setOnMouseExited(e -> {
@@ -330,8 +357,7 @@ public class LoginPage extends Scene {
                             "-fx-background-radius: 25;" +
                             "-fx-border-radius: 25;" +
                             "-fx-cursor: hand;" +
-                            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 8, 0, 0, 2);"
-            );
+                            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 8, 0, 0, 2);");
         });
 
         button.setOnMousePressed(e -> {

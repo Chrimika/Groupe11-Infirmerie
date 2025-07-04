@@ -17,13 +17,19 @@ import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import models.Patient;
+import utils.DBConnection;
 
+import java.security.MessageDigest;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.time.LocalDate;
 
 public class PatientSignUp extends Scene {
     private TextField nomField, prenomField, sexeField, numDossierField;
     private DatePicker dateNaissancePicker;
     private TextField adresseField, telField, emailField;
+    private PasswordField passwordField;
     private TextArea allergiesArea, antecedentsArea;
     private Button submitBtn;
     private ImageView medicalImageView;
@@ -44,8 +50,7 @@ public class PatientSignUp extends Scene {
                 0, 0, 1, 1, true, CycleMethod.NO_CYCLE,
                 new Stop(0, Color.web("#f8f9fa")),
                 new Stop(0.5, Color.web("#e9ecef")),
-                new Stop(1, Color.web("#dee2e6"))
-        );
+                new Stop(1, Color.web("#dee2e6")));
 
         Rectangle background = new Rectangle(1000, 700);
         background.setFill(gradient);
@@ -104,15 +109,13 @@ public class PatientSignUp extends Scene {
         welcomeTitle.setStyle(
                 "-fx-text-fill: #0bcb95; " +
                         "-fx-font-size: 28px; " +
-                        "-fx-font-weight: bold;"
-        );
+                        "-fx-font-weight: bold;");
 
         Label welcomeSubtitle = new Label("Créez votre profil patient en quelques étapes simples");
         welcomeSubtitle.setStyle(
                 "-fx-text-fill: #6c757d; " +
                         "-fx-font-size: 14px; " +
-                        "-fx-text-alignment: center;"
-        );
+                        "-fx-text-alignment: center;");
         welcomeSubtitle.setWrapText(true);
         welcomeSubtitle.setMaxWidth(280);
 
@@ -172,8 +175,7 @@ public class PatientSignUp extends Scene {
         formTitle.setStyle(
                 "-fx-text-fill: #212529; " +
                         "-fx-font-size: 24px; " +
-                        "-fx-font-weight: bold;"
-        );
+                        "-fx-font-weight: bold;");
 
         // Bouton Retour
         Button backButton = new Button("Retour");
@@ -184,10 +186,9 @@ public class PatientSignUp extends Scene {
                         "-fx-font-weight: bold; " +
                         "-fx-padding: 10 20; " +
                         "-fx-background-radius: 5; " +
-                        "-fx-cursor: hand;"
-        );
+                        "-fx-cursor: hand;");
         backButton.setOnAction(e -> {
-            Stage stage = (Stage) getWindow();
+            Stage stage = (Stage) backButton.getScene().getWindow();
             stage.setScene(new ChoiceInscriptionView(stage));
         });
 
@@ -212,8 +213,7 @@ public class PatientSignUp extends Scene {
         formContainer.setStyle(
                 "-fx-background-color: white; " +
                         "-fx-background-radius: 15; " +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);"
-        );
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 2);");
 
         // Section 1: Informations personnelles
         VBox personalSection = createFormSection("Informations Personnelles", createPersonalFields());
@@ -238,8 +238,7 @@ public class PatientSignUp extends Scene {
         sectionTitle.setStyle(
                 "-fx-text-fill: #0bcb95; " +
                         "-fx-font-size: 16px; " +
-                        "-fx-font-weight: bold;"
-        );
+                        "-fx-font-weight: bold;");
 
         section.getChildren().addAll(sectionTitle, fields);
         return section;
@@ -264,8 +263,7 @@ public class PatientSignUp extends Scene {
                 createFieldWithLabel("Prénom *", prenomField),
                 createFieldWithLabel("Date de naissance *", dateNaissancePicker),
                 createFieldWithLabel("Sexe", sexeField),
-                createFieldWithLabel("Numéro de dossier", numDossierField)
-        );
+                createFieldWithLabel("Numéro de dossier", numDossierField));
 
         return fields;
     }
@@ -276,12 +274,13 @@ public class PatientSignUp extends Scene {
         adresseField = createStyledTextField("Adresse");
         telField = createStyledTextField("Téléphone");
         emailField = createStyledTextField("Email");
+        passwordField = createStyledPasswordField("Mot de passe");
 
         fields.getChildren().addAll(
                 createFieldWithLabel("Adresse", adresseField),
                 createFieldWithLabel("Téléphone", telField),
-                createFieldWithLabel("Email", emailField)
-        );
+                createFieldWithLabel("Email *", emailField),
+                createFieldWithLabel("Mot de passe *", passwordField));
 
         return fields;
     }
@@ -294,8 +293,7 @@ public class PatientSignUp extends Scene {
 
         fields.getChildren().addAll(
                 createFieldWithLabel("Allergies", allergiesArea),
-                createFieldWithLabel("Antécédents médicaux", antecedentsArea)
-        );
+                createFieldWithLabel("Antécédents médicaux", antecedentsArea));
 
         return fields;
     }
@@ -317,6 +315,13 @@ public class PatientSignUp extends Scene {
         return field;
     }
 
+    private PasswordField createStyledPasswordField(String promptText) {
+        PasswordField field = new PasswordField();
+        field.setPromptText(promptText);
+        styleControl(field);
+        return field;
+    }
+
     private TextArea createStyledTextArea(String promptText) {
         TextArea area = new TextArea();
         area.setPromptText(promptText);
@@ -333,8 +338,7 @@ public class PatientSignUp extends Scene {
                         "-fx-border-radius: 8; " +
                         "-fx-background-radius: 8; " +
                         "-fx-padding: 10; " +
-                        "-fx-font-size: 14px;"
-        );
+                        "-fx-font-size: 14px;");
 
         // Effet focus
         control.focusedProperty().addListener((obs, oldVal, newVal) -> {
@@ -346,8 +350,7 @@ public class PatientSignUp extends Scene {
                                 "-fx-border-radius: 8; " +
                                 "-fx-background-radius: 8; " +
                                 "-fx-padding: 10; " +
-                                "-fx-font-size: 14px;"
-                );
+                                "-fx-font-size: 14px;");
             } else {
                 control.setStyle(
                         "-fx-background-color: #f8f9fa; " +
@@ -356,8 +359,7 @@ public class PatientSignUp extends Scene {
                                 "-fx-border-radius: 8; " +
                                 "-fx-background-radius: 8; " +
                                 "-fx-padding: 10; " +
-                                "-fx-font-size: 14px;"
-                );
+                                "-fx-font-size: 14px;");
             }
         });
     }
@@ -371,8 +373,7 @@ public class PatientSignUp extends Scene {
                         "-fx-font-weight: bold; " +
                         "-fx-padding: 15 30 15 30; " +
                         "-fx-background-radius: 25; " +
-                        "-fx-cursor: hand;"
-        );
+                        "-fx-cursor: hand;");
 
         submitBtn.setMaxWidth(Double.MAX_VALUE);
 
@@ -393,8 +394,7 @@ public class PatientSignUp extends Scene {
                             "-fx-font-weight: bold; " +
                             "-fx-padding: 15 30 15 30; " +
                             "-fx-background-radius: 25; " +
-                            "-fx-cursor: hand;"
-            );
+                            "-fx-cursor: hand;");
 
             ScaleTransition scale = new ScaleTransition(Duration.millis(150), submitBtn);
             scale.setToX(1.02);
@@ -410,8 +410,7 @@ public class PatientSignUp extends Scene {
                             "-fx-font-weight: bold; " +
                             "-fx-padding: 15 30 15 30; " +
                             "-fx-background-radius: 25; " +
-                            "-fx-cursor: hand;"
-            );
+                            "-fx-cursor: hand;");
 
             ScaleTransition scale = new ScaleTransition(Duration.millis(150), submitBtn);
             scale.setToX(1.0);
@@ -422,15 +421,111 @@ public class PatientSignUp extends Scene {
         submitBtn.setOnAction(e -> {
             if (validateForm()) {
                 Patient patient = createPatient();
-                // TODO: Enregistrer le patient
-                System.out.println("Patient créé: " + patient.getNom());
+                String password = passwordField.getText();
 
-                // Animation de succès
-                showSuccessAnimation();
+                if (savePatientToDatabase(patient, password)) {
+                    System.out.println("✅ Patient enregistré avec succès");
+                    showSuccessAnimation();
+                } else {
+                    System.out.println("❌ Échec de l'enregistrement du patient");
+                    showDatabaseError();
+                }
             } else {
                 showValidationError();
             }
         });
+    }
+
+    private boolean savePatientToDatabase(Patient patient, String password) {
+        Connection conn = null;
+        try {
+            conn = DBConnection.getConnection();
+            conn.setAutoCommit(false); // Démarrer une transaction
+
+            String hashedPassword = hashPassword(password);
+            if (hashedPassword.length() > 45) {
+                hashedPassword = hashedPassword.substring(0, 45);
+            }
+
+            // 1. Insérer dans la table utilisateur
+            String sqlUser = "INSERT INTO utilisateur (email, mot_de_passe, role) VALUES (?, ?, ?)";
+
+            try (PreparedStatement pstmtUser = conn.prepareStatement(sqlUser,
+                    PreparedStatement.RETURN_GENERATED_KEYS)) {
+                pstmtUser.setString(1, patient.getEmail());
+                pstmtUser.setString(2, hashedPassword);
+                pstmtUser.setString(3, "patient");
+                int userAffected = pstmtUser.executeUpdate();
+
+                if (userAffected == 0) {
+                    conn.rollback();
+                    return false;
+                }
+            }
+
+            // 2. Insérer dans la table patient
+            String sqlPatient = "INSERT INTO patient ("
+                    + "nom, prenom, date_naissance, numero_dossier, adresse, telephone, "
+                    + "email, allergies, antecedents, mot_passe) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+
+            try (PreparedStatement pstmtPatient = conn.prepareStatement(sqlPatient)) {
+                pstmtPatient.setString(1, patient.getNom());
+                pstmtPatient.setString(2, patient.getPrenom());
+                pstmtPatient.setDate(3, java.sql.Date.valueOf(patient.getDateNaissance()));
+                pstmtPatient.setString(4, patient.getNumeroDossier());
+                pstmtPatient.setString(5, patient.getAdresse());
+                pstmtPatient.setString(6, patient.getTelephone());
+                pstmtPatient.setString(7, patient.getEmail());
+                pstmtPatient.setString(8, patient.getAllergies());
+                pstmtPatient.setString(9, patient.getAntecedents());
+                pstmtPatient.setString(10, hashedPassword);
+
+                int patientAffected = pstmtPatient.executeUpdate();
+                if (patientAffected == 0) {
+                    conn.rollback();
+                    return false;
+                }
+            }
+
+            conn.commit(); // Valider la transaction
+            return true;
+
+        } catch (SQLException ex) {
+            System.err.println("Erreur SQL: " + ex.getMessage());
+            if (conn != null) {
+                try {
+                    conn.rollback(); // Annuler en cas d'erreur
+                } catch (SQLException ex1) {
+                    System.err.println("Erreur de rollback: " + ex1.getMessage());
+                }
+            }
+            return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.setAutoCommit(true); // Rétablir le mode auto-commit
+                    conn.close();
+                } catch (SQLException ex) {
+                    System.err.println("Erreur de fermeture: " + ex.getMessage());
+                }
+            }
+        }
+    }
+
+    private String hashPassword(String password) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] hashedBytes = md.digest(password.getBytes());
+            StringBuilder sb = new StringBuilder();
+            for (byte b : hashedBytes) {
+                sb.append(String.format("%02x", b));
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return password; // Fallback (non sécurisé)
+        }
     }
 
     private void startAnimations() {
@@ -460,7 +555,9 @@ public class PatientSignUp extends Scene {
     private boolean validateForm() {
         return !nomField.getText().trim().isEmpty() &&
                 !prenomField.getText().trim().isEmpty() &&
-                dateNaissancePicker.getValue() != null;
+                dateNaissancePicker.getValue() != null &&
+                !emailField.getText().trim().isEmpty() &&
+                !passwordField.getText().isEmpty();
     }
 
     private void showValidationError() {
@@ -480,10 +577,9 @@ public class PatientSignUp extends Scene {
                         "-fx-font-weight: bold; " +
                         "-fx-padding: 15 30 15 30; " +
                         "-fx-background-radius: 25; " +
-                        "-fx-cursor: hand;"
-        );
+                        "-fx-cursor: hand;");
 
-        Timeline resetColor = new Timeline(new KeyFrame(Duration.seconds(2), e -> {
+        Timeline resetColor = new Timeline(new KeyFrame(Duration.seconds(2), event -> {
             submitBtn.setStyle(
                     "-fx-background-color: #0bcb95; " +
                             "-fx-text-fill: white; " +
@@ -491,10 +587,17 @@ public class PatientSignUp extends Scene {
                             "-fx-font-weight: bold; " +
                             "-fx-padding: 15 30 15 30; " +
                             "-fx-background-radius: 25; " +
-                            "-fx-cursor: hand;"
-            );
+                            "-fx-cursor: hand;");
         }));
         resetColor.play();
+    }
+
+    private void showDatabaseError() {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Erreur de base de données");
+        alert.setHeaderText("Échec de l'enregistrement");
+        alert.setContentText("Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.");
+        alert.showAndWait();
     }
 
     private void showSuccessAnimation() {
@@ -507,6 +610,15 @@ public class PatientSignUp extends Scene {
         success.setAutoReverse(true);
         success.setCycleCount(2);
         success.play();
+
+        // Redirection après succès
+        Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
+            Stage stage = (Stage) submitBtn.getScene().getWindow();
+            // Rediriger vers la vue de connexion patient existante
+            // stage.setScene(new PatientLoginView(stage));
+            System.out.println("Redirection vers la page de connexion patient");
+        }));
+        timeline.play();
     }
 
     private Patient createPatient() {
