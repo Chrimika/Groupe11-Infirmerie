@@ -91,7 +91,8 @@ public class AppointmentManagement extends Scene {
         VBox header = new VBox();
         header.setAlignment(Pos.CENTER);
         header.setPadding(new Insets(25));
-        header.setStyle("-fx-background-color: #0bcb95; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 2);");
+        header.setStyle(
+                "-fx-background-color: #0bcb95; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 5, 0, 0, 2);");
 
         Label title = new Label("Prise de Rendez-vous");
         title.setTextFill(Color.WHITE);
@@ -135,8 +136,7 @@ public class AppointmentManagement extends Scene {
                 medecinSection,
                 disponibilitesSection,
                 motifSection,
-                recapSection
-        );
+                recapSection);
 
         scrollPane.setContent(mainContent);
         return scrollPane;
@@ -144,7 +144,8 @@ public class AppointmentManagement extends Scene {
 
     private VBox createPatientSection() {
         VBox section = new VBox(12);
-        section.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2); -fx-padding: 25;");
+        section.setStyle(
+                "-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2); -fx-padding: 25;");
 
         Label sectionTitle = new Label("👤 Patient");
         sectionTitle.setFont(Font.font("System", FontWeight.BOLD, 18));
@@ -156,15 +157,15 @@ public class AppointmentManagement extends Scene {
         patientComboBox = new ComboBox<>();
         patientComboBox.setPromptText("Choisir un patient...");
         patientComboBox.setPrefWidth(400);
-        patientComboBox.setStyle("-fx-font-size: 14px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-padding: 8;");
+        patientComboBox
+                .setStyle("-fx-font-size: 14px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-padding: 8;");
 
         patientComboBox.getItems().addAll(
                 "Jean Dupont (15 ans) - Classe: 3èmeA",
                 "Marie Martin (14 ans) - Classe: 4èmeB",
                 "Pierre Durand (16 ans) - Classe: 2ndeC",
                 "Sophie Moreau (13 ans) - Classe: 5èmeA",
-                "Antoine Petit (17 ans) - Classe: 1èreS"
-        );
+                "Antoine Petit (17 ans) - Classe: 1èreS");
 
         section.getChildren().addAll(sectionTitle, patientLabel, patientComboBox);
         return section;
@@ -172,7 +173,8 @@ public class AppointmentManagement extends Scene {
 
     private VBox createMedecinSection() {
         VBox section = new VBox(12);
-        section.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2); -fx-padding: 25;");
+        section.setStyle(
+                "-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2); -fx-padding: 25;");
 
         Label sectionTitle = new Label("👨‍⚕️ Médecin");
         sectionTitle.setFont(Font.font("System", FontWeight.BOLD, 18));
@@ -184,7 +186,8 @@ public class AppointmentManagement extends Scene {
         medecinComboBox = new ComboBox<>();
         medecinComboBox.setPromptText("Sélectionner un médecin...");
         medecinComboBox.setPrefWidth(400);
-        medecinComboBox.setStyle("-fx-font-size: 14px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-padding: 8;");
+        medecinComboBox
+                .setStyle("-fx-font-size: 14px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-padding: 8;");
 
         medecinComboBox.getItems().addAll(disponibilitesMedecins.keySet());
 
@@ -199,7 +202,8 @@ public class AppointmentManagement extends Scene {
 
     private VBox createDisponibilitesSection() {
         VBox section = new VBox(15);
-        section.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2); -fx-padding: 25;");
+        section.setStyle(
+                "-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2); -fx-padding: 25;");
 
         Label sectionTitle = new Label("📅 Créneaux Disponibles");
         sectionTitle.setFont(Font.font("System", FontWeight.BOLD, 18));
@@ -220,7 +224,8 @@ public class AppointmentManagement extends Scene {
 
     private VBox createMotifSection() {
         VBox section = new VBox(12);
-        section.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2); -fx-padding: 25;");
+        section.setStyle(
+                "-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 6, 0, 0, 2); -fx-padding: 25;");
 
         Label sectionTitle = new Label("📝 Motif de la Consultation");
         sectionTitle.setFont(Font.font("System", FontWeight.BOLD, 18));
@@ -230,7 +235,8 @@ public class AppointmentManagement extends Scene {
         motifArea.setPromptText("Décrivez brièvement le motif de votre consultation...");
         motifArea.setPrefRowCount(3);
         motifArea.setWrapText(true);
-        motifArea.setStyle("-fx-font-size: 14px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #dee2e6; -fx-padding: 10;");
+        motifArea.setStyle(
+                "-fx-font-size: 14px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #dee2e6; -fx-padding: 10;");
 
         section.getChildren().addAll(sectionTitle, motifArea);
         return section;
@@ -238,7 +244,8 @@ public class AppointmentManagement extends Scene {
 
     private VBox createRecapSection() {
         VBox section = new VBox(12);
-        section.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 12; -fx-border-color: #0bcb95; -fx-border-width: 2; -fx-border-radius: 12; -fx-padding: 25;");
+        section.setStyle(
+                "-fx-background-color: #f8f9fa; -fx-background-radius: 12; -fx-border-color: #0bcb95; -fx-border-width: 2; -fx-border-radius: 12; -fx-padding: 25;");
 
         Label sectionTitle = new Label("📋 Récapitulatif");
         sectionTitle.setFont(Font.font("System", FontWeight.BOLD, 18));
@@ -294,12 +301,15 @@ public class AppointmentManagement extends Scene {
                 Button jourButton = new Button(jour);
                 jourButton.setPrefWidth(100);
                 jourButton.setPrefHeight(35);
-                jourButton.setStyle("-fx-background-color: #e9ecef; -fx-text-fill: #495057; -fx-font-size: 12px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-cursor: hand;");
+                jourButton.setStyle(
+                        "-fx-background-color: #e9ecef; -fx-text-fill: #495057; -fx-font-size: 12px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-cursor: hand;");
 
                 jourButton.setOnAction(e -> updateHeures(jour, disponibilites.get(jour)));
 
-                jourButton.setOnMouseEntered(e -> jourButton.setStyle("-fx-background-color: #0bcb95; -fx-text-fill: white; -fx-font-size: 12px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-cursor: hand;"));
-                jourButton.setOnMouseExited(e -> jourButton.setStyle("-fx-background-color: #e9ecef; -fx-text-fill: #495057; -fx-font-size: 12px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-cursor: hand;"));
+                jourButton.setOnMouseEntered(e -> jourButton.setStyle(
+                        "-fx-background-color: #0bcb95; -fx-text-fill: white; -fx-font-size: 12px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-cursor: hand;"));
+                jourButton.setOnMouseExited(e -> jourButton.setStyle(
+                        "-fx-background-color: #e9ecef; -fx-text-fill: #495057; -fx-font-size: 12px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-cursor: hand;"));
 
                 joursContainer.getChildren().add(jourButton);
             }
@@ -323,12 +333,15 @@ public class AppointmentManagement extends Scene {
             Button heureButton = new Button(heure);
             heureButton.setPrefWidth(80);
             heureButton.setPrefHeight(30);
-            heureButton.setStyle("-fx-background-color: white; -fx-text-fill: #0bcb95; -fx-font-size: 12px; -fx-background-radius: 6; -fx-border-color: #0bcb95; -fx-border-width: 1; -fx-border-radius: 6; -fx-cursor: hand;");
+            heureButton.setStyle(
+                    "-fx-background-color: white; -fx-text-fill: #0bcb95; -fx-font-size: 12px; -fx-background-radius: 6; -fx-border-color: #0bcb95; -fx-border-width: 1; -fx-border-radius: 6; -fx-cursor: hand;");
 
             heureButton.setOnAction(e -> selectCreneau(jour, heure));
 
-            heureButton.setOnMouseEntered(e -> heureButton.setStyle("-fx-background-color: #0bcb95; -fx-text-fill: white; -fx-font-size: 12px; -fx-background-radius: 6; -fx-border-radius: 6; -fx-cursor: hand;"));
-            heureButton.setOnMouseExited(e -> heureButton.setStyle("-fx-background-color: white; -fx-text-fill: #0bcb95; -fx-font-size: 12px; -fx-background-radius: 6; -fx-border-color: #0bcb95; -fx-border-width: 1; -fx-border-radius: 6; -fx-cursor: hand;"));
+            heureButton.setOnMouseEntered(e -> heureButton.setStyle(
+                    "-fx-background-color: #0bcb95; -fx-text-fill: white; -fx-font-size: 12px; -fx-background-radius: 6; -fx-border-radius: 6; -fx-cursor: hand;"));
+            heureButton.setOnMouseExited(e -> heureButton.setStyle(
+                    "-fx-background-color: white; -fx-text-fill: #0bcb95; -fx-font-size: 12px; -fx-background-radius: 6; -fx-border-color: #0bcb95; -fx-border-width: 1; -fx-border-radius: 6; -fx-cursor: hand;"));
 
             heuresFlow.getChildren().add(heureButton);
         }
@@ -372,26 +385,32 @@ public class AppointmentManagement extends Scene {
         annulerButton = new Button("Annuler");
         annulerButton.setPrefWidth(130);
         annulerButton.setPrefHeight(45);
-        annulerButton.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; -fx-font-size: 14px; -fx-background-radius: 8; -fx-cursor: hand;");
+        annulerButton.setStyle(
+                "-fx-background-color: #6c757d; -fx-text-fill: white; -fx-font-size: 14px; -fx-background-radius: 8; -fx-cursor: hand;");
 
         confirmerButton = new Button("Confirmer le Rendez-vous");
         confirmerButton.setPrefWidth(220);
         confirmerButton.setPrefHeight(45);
-        confirmerButton.setStyle("-fx-background-color: #0bcb95; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;");
+        confirmerButton.setStyle(
+                "-fx-background-color: #0bcb95; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;");
         confirmerButton.setDisable(true);
 
         // Effets de survol
-        annulerButton.setOnMouseEntered(e -> annulerButton.setStyle("-fx-background-color: #5a6268; -fx-text-fill: white; -fx-font-size: 14px; -fx-background-radius: 8; -fx-cursor: hand;"));
-        annulerButton.setOnMouseExited(e -> annulerButton.setStyle("-fx-background-color: #6c757d; -fx-text-fill: white; -fx-font-size: 14px; -fx-background-radius: 8; -fx-cursor: hand;"));
+        annulerButton.setOnMouseEntered(e -> annulerButton.setStyle(
+                "-fx-background-color: #5a6268; -fx-text-fill: white; -fx-font-size: 14px; -fx-background-radius: 8; -fx-cursor: hand;"));
+        annulerButton.setOnMouseExited(e -> annulerButton.setStyle(
+                "-fx-background-color: #6c757d; -fx-text-fill: white; -fx-font-size: 14px; -fx-background-radius: 8; -fx-cursor: hand;"));
 
         confirmerButton.setOnMouseEntered(e -> {
             if (!confirmerButton.isDisabled()) {
-                confirmerButton.setStyle("-fx-background-color: #0aa082; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;");
+                confirmerButton.setStyle(
+                        "-fx-background-color: #0aa082; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;");
             }
         });
         confirmerButton.setOnMouseExited(e -> {
             if (!confirmerButton.isDisabled()) {
-                confirmerButton.setStyle("-fx-background-color: #0bcb95; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;");
+                confirmerButton.setStyle(
+                        "-fx-background-color: #0bcb95; -fx-text-fill: white; -fx-font-size: 14px; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand;");
             }
         });
 

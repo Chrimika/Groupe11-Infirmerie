@@ -62,8 +62,7 @@ public class DoctorInterface extends Scene {
                 0, 0, 1, 1, true, null,
                 new Stop(0, Color.web("#0bcb95")),
                 new Stop(0.6, Color.web("#7dd3c0")),
-                new Stop(1, Color.web("#f8fffe"))
-        );
+                new Stop(1, Color.web("#f8fffe")));
         background.setFill(gradient);
 
         GaussianBlur blur = new GaussianBlur(1);
@@ -107,8 +106,7 @@ public class DoctorInterface extends Scene {
                         "-fx-background-radius: 15;" +
                         "-fx-border-radius: 15;" +
                         "-fx-border-color: rgba(255, 255, 255, 0.3);" +
-                        "-fx-border-width: 1;"
-        );
+                        "-fx-border-width: 1;");
 
         // Ombre portée
         DropShadow headerShadow = new DropShadow();
@@ -182,8 +180,7 @@ public class DoctorInterface extends Scene {
                         "-fx-background-radius: 15;" +
                         "-fx-border-radius: 15;" +
                         "-fx-border-color: rgba(255, 255, 255, 0.4);" +
-                        "-fx-border-width: 1;"
-        );
+                        "-fx-border-width: 1;");
         panel.setPadding(new Insets(25));
 
         // Ombre portée
@@ -233,8 +230,7 @@ public class DoctorInterface extends Scene {
                 createAppointmentCard("Marie Curie", "11:30", "Contrôle tension", "❤️", "#f3e5f5"),
                 createAppointmentCard("Pierre Martin", "14:00", "Vaccination", "💉", "#e8f5e8"),
                 createAppointmentCard("Sophie Bernard", "15:30", "Consultation pédiatrique", "👶", "#fff3e0"),
-                createAppointmentCard("Lucas Moreau", "16:45", "Bilan de santé", "📋", "#f1f8e9")
-        );
+                createAppointmentCard("Lucas Moreau", "16:45", "Bilan de santé", "📋", "#f1f8e9"));
     }
 
     private HBox createAppointmentCard(String patientName, String time, String reason, String icon, String bgColor) {
@@ -246,8 +242,7 @@ public class DoctorInterface extends Scene {
                         "-fx-background-radius: 10;" +
                         "-fx-border-radius: 10;" +
                         "-fx-border-color: rgba(0, 0, 0, 0.05);" +
-                        "-fx-border-width: 1;"
-        );
+                        "-fx-border-width: 1;");
 
         // Effet hover
         card.setOnMouseEntered(e -> {
@@ -262,8 +257,7 @@ public class DoctorInterface extends Scene {
                             "-fx-border-radius: 10;" +
                             "-fx-border-color: #0bcb95;" +
                             "-fx-border-width: 2;" +
-                            "-fx-cursor: hand;"
-            );
+                            "-fx-cursor: hand;");
         });
 
         card.setOnMouseExited(e -> {
@@ -277,8 +271,7 @@ public class DoctorInterface extends Scene {
                             "-fx-background-radius: 10;" +
                             "-fx-border-radius: 10;" +
                             "-fx-border-color: rgba(0, 0, 0, 0.05);" +
-                            "-fx-border-width: 1;"
-            );
+                            "-fx-border-width: 1;");
         });
 
         // Icône
@@ -319,8 +312,7 @@ public class DoctorInterface extends Scene {
                         "-fx-background-radius: 15;" +
                         "-fx-border-radius: 15;" +
                         "-fx-border-color: rgba(255, 255, 255, 0.4);" +
-                        "-fx-border-width: 1;"
-        );
+                        "-fx-border-width: 1;");
         panel.setPadding(new Insets(25));
 
         // Ombre portée
@@ -341,8 +333,7 @@ public class DoctorInterface extends Scene {
                 createStatCard("👥", "Patients vus", "12", "#e3f2fd"),
                 createStatCard("📅", "RDV programmés", "5", "#f3e5f5"),
                 createStatCard("🚨", "Urgences", "2", "#ffebee"),
-                createStatCard("⏰", "Temps moyen", "25min", "#e8f5e8")
-        );
+                createStatCard("⏰", "Temps moyen", "25min", "#e8f5e8"));
 
         panel.getChildren().addAll(title, statsCards);
 
@@ -356,8 +347,7 @@ public class DoctorInterface extends Scene {
         card.setStyle(
                 "-fx-background-color: " + bgColor + ";" +
                         "-fx-background-radius: 8;" +
-                        "-fx-border-radius: 8;"
-        );
+                        "-fx-border-radius: 8;");
 
         Label iconLabel = new Label(icon);
         iconLabel.setFont(Font.font("Arial", 20));
@@ -415,8 +405,7 @@ public class DoctorInterface extends Scene {
                             "-fx-background-radius: 22;" +
                             "-fx-border-radius: 22;" +
                             "-fx-cursor: hand;" +
-                            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 8, 0, 0, 2);"
-            );
+                            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 8, 0, 0, 2);");
         } else {
             button.setPrefSize(160, 40);
             button.setStyle(
@@ -425,8 +414,7 @@ public class DoctorInterface extends Scene {
                             "-fx-background-radius: 20;" +
                             "-fx-border-radius: 20;" +
                             "-fx-cursor: hand;" +
-                            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 5, 0, 0, 1);"
-            );
+                            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 5, 0, 0, 1);");
         }
 
         // Animations

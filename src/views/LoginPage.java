@@ -25,13 +25,10 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import services.AuthService;
 
 public class LoginPage extends Scene {
-    private Label errorLabel;
     private VBox loginForm;
     private ImageView loginImage;
-    private Button loginButton;
 
     public LoginPage() {
         super(new StackPane(), 800, 600);
@@ -155,13 +152,9 @@ public class LoginPage extends Scene {
         // Champs de saisie modernes
         TextField username = createModernTextField("Nom d'utilisateur", "👤");
         PasswordField password = createModernPasswordField("Mot de passe", "🔒");
-        errorLabel = new Label();
-        errorLabel.setTextFill(Color.RED);
-        errorLabel.setFont(Font.font("Segoe UI", 12));
 
         // Bouton de connexion avec animation
         Button loginButton = createModernButton("Se connecter");
-        loginButton.setOnAction(e -> handleLogin(username.getText(), password.getText()));
 
         // Texte et bouton pour inscription
         Label noAccountLabel = new Label("Pas encore de compte ?");
@@ -186,43 +179,11 @@ public class LoginPage extends Scene {
         loginForm.getChildren().addAll(
                 new VBox(5, title, subtitle),
                 new VBox(20, username, password),
-                errorLabel,
                 loginButton,
                 signUpSection);
 
         formSection.getChildren().add(loginForm);
         return formSection;
-    }
-
-    private void handleLogin(String email, String password) {
-        if (email.isEmpty() || password.isEmpty()) {
-            errorLabel.setText("Veuillez remplir tous les champs");
-            return;
-        }
-
-        String role = AuthService.getRoleByEmail(email);
-
-        if (role == null) {
-            errorLabel.setText("Email ou mot de passe incorrect");
-            return;
-        }
-
-        Stage stage = (Stage) loginButton.getScene().getWindow();
-
-        switch (role.toUpperCase()) {
-            case "SECRETAIRE":
-                stage.setScene(new AppointmentManagement());
-                break;
-            case "MEDECIN":
-                stage.setScene(new DoctorInterface());
-                break;
-            case "PATIENT":
-                // stage.setScene(new PatientInterface()); // À implémenter
-                errorLabel.setText("Interface patient non disponible");
-                break;
-            default:
-                errorLabel.setText("Rôle non reconnu");
-        }
     }
 
     private TextField createModernTextField(String placeholder, String icon) {
