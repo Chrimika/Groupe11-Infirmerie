@@ -12,11 +12,14 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 import models.Patient;
 
@@ -32,10 +35,26 @@ public class AppointmentManagement extends Scene {
     private Label selectedMedecinInfo;
     private Label selectedDateTimeInfo;
 
-    // Données simulées des médecins et leurs disponibilités (pour compatibilité)
-    private Map<String, Map<String, List<String>>> disponibilitesMedecins = new HashMap<>();
-
+    // Données simulées des médecins et leurs disponibilités (plus utilisé)
+    // private Map<String, Map<String, List<String>>> disponibilitesMedecins;
+    private List<MedecinItem> medecinsList = new ArrayList<>();
     private Patient currentPatient = null;
+    private MedecinItem selectedMedecin = null;
+
+    // Classe interne pour stocker les infos médecin
+    private static class MedecinItem {
+        int id;
+        String nom;
+        String prenom;
+        String specialite;
+        String telephone;
+        String email;
+        boolean actif;
+
+        public String toString() {
+            return nom + " " + prenom + " - " + specialite;
+        }
+    }
 
     // Constructeur par défaut (mode classique)
     public AppointmentManagement() {
@@ -47,7 +66,7 @@ public class AppointmentManagement extends Scene {
         super(new BorderPane(), 800, 600);
         this.currentPatient = patient;
 
-        initializeData();
+        loadMedecinsFromDatabase();
 
         BorderPane root = (BorderPane) getRoot();
         root.setStyle("-fx-background-color: #f8f9fa;");
@@ -68,34 +87,43 @@ public class AppointmentManagement extends Scene {
         setupEventHandlers();
     }
 
-    private void initializeData() {
-        disponibilitesMedecins = new HashMap<>();
-
-        // Dr. Martin - Médecin généraliste
-        Map<String, List<String>> martinDispo = new HashMap<>();
-        martinDispo.put("Lundi", Arrays.asList("08:00", "09:00", "10:00", "14:00", "15:00", "16:00"));
-        martinDispo.put("Mardi", Arrays.asList("08:00", "09:00", "10:00", "11:00", "14:00", "15:00"));
-        martinDispo.put("Mercredi", Arrays.asList("08:00", "09:00", "10:00"));
-        martinDispo.put("Jeudi", Arrays.asList("08:00", "09:00", "10:00", "14:00", "15:00", "16:00"));
-        martinDispo.put("Vendredi", Arrays.asList("08:00", "09:00", "10:00", "11:00"));
-        disponibilitesMedecins.put("Dr. Martin - Médecin généraliste", martinDispo);
-
-        // Dr. Dubois - Pédiatre
-        Map<String, List<String>> duboisDispo = new HashMap<>();
-        duboisDispo.put("Lundi", Arrays.asList("09:00", "10:00", "11:00", "14:00", "15:00"));
-        duboisDispo.put("Mardi", Arrays.asList("08:00", "09:00", "10:00", "14:00", "15:00", "16:00"));
-        duboisDispo.put("Jeudi", Arrays.asList("08:00", "09:00", "10:00", "11:00", "14:00"));
-        duboisDispo.put("Vendredi", Arrays.asList("09:00", "10:00", "11:00", "14:00", "15:00", "16:00"));
-        disponibilitesMedecins.put("Dr. Dubois - Pédiatre", duboisDispo);
-
-        // Dr. Leroy - Infirmier scolaire
-        Map<String, List<String>> leroyDispo = new HashMap<>();
-        leroyDispo.put("Lundi", Arrays.asList("08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00"));
-        leroyDispo.put("Mardi", Arrays.asList("08:00", "09:00", "10:00", "11:00", "14:00", "15:00"));
-        leroyDispo.put("Mercredi", Arrays.asList("08:00", "09:00", "10:00", "11:00"));
-        leroyDispo.put("Jeudi", Arrays.asList("08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00"));
-        leroyDispo.put("Vendredi", Arrays.asList("08:00", "09:00", "10:00", "11:00", "14:00"));
-        disponibilitesMedecins.put("Dr. Leroy - Infirmier scolaire", leroyDispo);
+    // Charge les médecins depuis la base de données
+    private void loadMedecinsFromDatabase() {
+        medecinsList.clear();
+        try (Connection conn = utils.DBConnection.getConnection()) {
+            String sql = "CREATE TABLE IF NOT EXISTS medecin (" +
+                    "id INT NOT NULL AUTO_INCREMENT," +
+                    "nom VARCHAR(100) NOT NULL," +
+                    "prenom VARCHAR(100) NOT NULL," +
+                    "specialite VARCHAR(100) NOT NULL," +
+                    "telephone VARCHAR(20) NOT NULL," +
+                    "email VARCHAR(100) NOT NULL," +
+                    "est_actif TINYINT(1) DEFAULT '1'," +
+                    "mot_passe VARCHAR(100) NOT NULL," +
+                    "PRIMARY KEY (id)) " +
+                    "ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+            try (Statement st = conn.createStatement()) {
+                st.executeUpdate(sql);
+            }
+            String select = "SELECT * FROM medecin WHERE est_actif = 1";
+            try (PreparedStatement stmt = conn.prepareStatement(select)) {
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        MedecinItem m = new MedecinItem();
+                        m.id = rs.getInt("id");
+                        m.nom = rs.getString("nom");
+                        m.prenom = rs.getString("prenom");
+                        m.specialite = rs.getString("specialite");
+                        m.telephone = rs.getString("telephone");
+                        m.email = rs.getString("email");
+                        m.actif = rs.getBoolean("est_actif");
+                        medecinsList.add(m);
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 
     private VBox createHeader() {
@@ -217,7 +245,10 @@ public class AppointmentManagement extends Scene {
         medecinComboBox
                 .setStyle("-fx-font-size: 14px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-padding: 8;");
 
-        medecinComboBox.getItems().addAll(disponibilitesMedecins.keySet());
+        // Remplir dynamiquement avec les médecins de la base
+        for (MedecinItem m : medecinsList) {
+            medecinComboBox.getItems().add(m.toString());
+        }
 
         selectedMedecinInfo = new Label("");
         selectedMedecinInfo.setFont(Font.font("System", FontWeight.NORMAL, 12));
@@ -290,12 +321,86 @@ public class AppointmentManagement extends Scene {
 
     private void setupEventHandlers() {
         medecinComboBox.setOnAction(e -> {
-            String selectedMedecin = medecinComboBox.getValue();
-            if (selectedMedecin != null) {
-                updateMedecinInfo(selectedMedecin);
-                updateDisponibilites(selectedMedecin);
+            int idx = medecinComboBox.getSelectionModel().getSelectedIndex();
+            if (idx >= 0 && idx < medecinsList.size()) {
+                selectedMedecin = medecinsList.get(idx);
+                updateMedecinInfo(selectedMedecin.toString());
+                showDisponibilitesForMedecin(selectedMedecin);
             }
         });
+    }
+
+    // Affiche dynamiquement les jours et horaires pour le médecin sélectionné
+    private void showDisponibilitesForMedecin(MedecinItem medecin) {
+        disponibilitesContainer.getChildren().clear();
+        heuresContainer.getChildren().clear();
+
+        // Créneaux fictifs par spécialité (tu peux adapter à la base si besoin)
+        Map<String, List<String>> dispo = new java.util.LinkedHashMap<>();
+        if (medecin.specialite.toLowerCase().contains("généraliste")) {
+            dispo.put("Lundi", List.of("08:00", "09:00", "10:00", "14:00", "15:00", "16:00"));
+            dispo.put("Mardi", List.of("08:00", "09:00", "10:00", "11:00", "14:00", "15:00"));
+            dispo.put("Jeudi", List.of("08:00", "09:00", "10:00", "14:00", "15:00", "16:00"));
+        } else if (medecin.specialite.toLowerCase().contains("pédiatre")) {
+            dispo.put("Lundi", List.of("09:00", "10:00", "11:00", "14:00", "15:00"));
+            dispo.put("Mardi", List.of("08:00", "09:00", "10:00", "14:00", "15:00", "16:00"));
+            dispo.put("Vendredi", List.of("09:00", "10:00", "11:00", "14:00", "15:00", "16:00"));
+        } else {
+            dispo.put("Lundi", List.of("08:00", "09:00", "10:00", "11:00", "14:00", "15:00", "16:00"));
+            dispo.put("Mercredi", List.of("08:00", "09:00", "10:00", "11:00"));
+            dispo.put("Jeudi", List.of("08:00", "09:00", "10:00", "11:00", "14:00"));
+        }
+
+        Label instructionLabel = new Label("Cliquez sur un jour pour voir les créneaux horaires disponibles:");
+        instructionLabel.setFont(Font.font("System", FontWeight.NORMAL, 14));
+        instructionLabel.setTextFill(Color.web("#495057"));
+        disponibilitesContainer.getChildren().add(instructionLabel);
+
+        HBox joursContainer = new HBox(10);
+        joursContainer.setAlignment(Pos.CENTER_LEFT);
+        for (String jour : dispo.keySet()) {
+            Button jourButton = new Button(jour);
+            jourButton.setPrefWidth(100);
+            jourButton.setPrefHeight(35);
+            jourButton.setStyle(
+                    "-fx-background-color: #e9ecef; -fx-text-fill: #495057; -fx-font-size: 12px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-cursor: hand;");
+            jourButton.setOnAction(ev -> showHeuresForJour(jour, dispo.get(jour)));
+            jourButton.setOnMouseEntered(ev -> jourButton.setStyle(
+                    "-fx-background-color: #0bcb95; -fx-text-fill: white; -fx-font-size: 12px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-cursor: hand;"));
+            jourButton.setOnMouseExited(ev -> jourButton.setStyle(
+                    "-fx-background-color: #e9ecef; -fx-text-fill: #495057; -fx-font-size: 12px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-cursor: hand;"));
+            joursContainer.getChildren().add(jourButton);
+        }
+        disponibilitesContainer.getChildren().add(joursContainer);
+    }
+
+    // Affiche dynamiquement les horaires pour un jour donné
+    private void showHeuresForJour(String jour, List<String> heures) {
+        heuresContainer.getChildren().clear();
+
+        Label heureLabel = new Label("Créneaux disponibles pour " + jour + ":");
+        heureLabel.setFont(Font.font("System", FontWeight.SEMI_BOLD, 14));
+        heureLabel.setTextFill(Color.web("#0bcb95"));
+
+        FlowPane heuresFlow = new FlowPane();
+        heuresFlow.setHgap(8);
+        heuresFlow.setVgap(8);
+
+        for (String heure : heures) {
+            Button heureButton = new Button(heure);
+            heureButton.setPrefWidth(80);
+            heureButton.setPrefHeight(30);
+            heureButton.setStyle(
+                    "-fx-background-color: white; -fx-text-fill: #0bcb95; -fx-font-size: 12px; -fx-background-radius: 6; -fx-border-color: #0bcb95; -fx-border-width: 1; -fx-border-radius: 6; -fx-cursor: hand;");
+            heureButton.setOnAction(ev -> selectCreneau(jour, heure));
+            heureButton.setOnMouseEntered(ev -> heureButton.setStyle(
+                    "-fx-background-color: #0bcb95; -fx-text-fill: white; -fx-font-size: 12px; -fx-background-radius: 6; -fx-border-radius: 6; -fx-cursor: hand;"));
+            heureButton.setOnMouseExited(ev -> heureButton.setStyle(
+                    "-fx-background-color: white; -fx-text-fill: #0bcb95; -fx-font-size: 12px; -fx-background-radius: 6; -fx-border-color: #0bcb95; -fx-border-width: 1; -fx-border-radius: 6; -fx-cursor: hand;"));
+            heuresFlow.getChildren().add(heureButton);
+        }
+
+        heuresContainer.getChildren().addAll(heureLabel, heuresFlow);
     }
 
     private void updateMedecinInfo(String medecin) {
@@ -310,41 +415,7 @@ public class AppointmentManagement extends Scene {
         selectedMedecinInfo.setText("Spécialités: " + info);
     }
 
-    private void updateDisponibilites(String medecin) {
-        disponibilitesContainer.getChildren().clear();
-        heuresContainer.getChildren().clear();
-
-        Map<String, List<String>> disponibilites = disponibilitesMedecins.get(medecin);
-        if (disponibilites != null) {
-            Label instructionLabel = new Label("Cliquez sur un jour pour voir les créneaux horaires disponibles:");
-            instructionLabel.setFont(Font.font("System", FontWeight.NORMAL, 14));
-            instructionLabel.setTextFill(Color.web("#495057"));
-
-            disponibilitesContainer.getChildren().add(instructionLabel);
-
-            HBox joursContainer = new HBox(10);
-            joursContainer.setAlignment(Pos.CENTER_LEFT);
-
-            for (String jour : disponibilites.keySet()) {
-                Button jourButton = new Button(jour);
-                jourButton.setPrefWidth(100);
-                jourButton.setPrefHeight(35);
-                jourButton.setStyle(
-                        "-fx-background-color: #e9ecef; -fx-text-fill: #495057; -fx-font-size: 12px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-cursor: hand;");
-
-                jourButton.setOnAction(e -> updateHeures(jour, disponibilites.get(jour)));
-
-                jourButton.setOnMouseEntered(e -> jourButton.setStyle(
-                        "-fx-background-color: #0bcb95; -fx-text-fill: white; -fx-font-size: 12px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-cursor: hand;"));
-                jourButton.setOnMouseExited(e -> jourButton.setStyle(
-                        "-fx-background-color: #e9ecef; -fx-text-fill: #495057; -fx-font-size: 12px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-cursor: hand;"));
-
-                joursContainer.getChildren().add(jourButton);
-            }
-
-            disponibilitesContainer.getChildren().add(joursContainer);
-        }
-    }
+    // plus utilisé
 
     private void updateHeures(String jour, List<String> heures) {
         heuresContainer.getChildren().clear();
@@ -397,6 +468,7 @@ public class AppointmentManagement extends Scene {
         recap.append("Veuillez confirmer votre rendez-vous.");
 
         selectedDateTimeInfo.setText(recap.toString());
+        selectedDateTimeInfo.setTextFill(Color.web("#222")); // Texte plus sombre
 
         // Activer le bouton de confirmation
         if (confirmerButton != null) {
@@ -442,8 +514,69 @@ public class AppointmentManagement extends Scene {
             }
         });
 
+        // Enregistrement du rendez-vous en base
+        confirmerButton.setOnAction(e -> {
+            if (selectedMedecin == null || currentPatient == null) {
+                showAlert("Erreur", "Veuillez sélectionner un médecin et un patient.");
+                return;
+            }
+            // On suppose que le créneau sélectionné est dans selectedDateTimeInfo
+            String recap = selectedDateTimeInfo.getText();
+            String jour = null, heure = null;
+            // Extraction simple (améliorable)
+            for (String line : recap.split("\n")) {
+                if (line.startsWith("📅"))
+                    jour = line.replace("📅 Date: ", "").trim();
+                if (line.startsWith("🕐"))
+                    heure = line.replace("🕐 Heure: ", "").trim();
+            }
+            if (jour == null || heure == null) {
+                showAlert("Erreur", "Veuillez sélectionner un créneau horaire.");
+                return;
+            }
+            saveRendezVousToDatabase(selectedMedecin.id, currentPatient.getNom(), jour, heure);
+            showAlert("Succès", "Rendez-vous enregistré avec succès !");
+            confirmerButton.setDisable(true);
+        });
+
         footer.getChildren().addAll(annulerButton, confirmerButton);
         return footer;
+    }
+
+    // Enregistrement du rendez-vous en base
+    private void saveRendezVousToDatabase(int medecinId, String patientNom, String jour, String heure) {
+        try (Connection conn = utils.DBConnection.getConnection()) {
+            String createTable = "CREATE TABLE IF NOT EXISTS rendezvous (" +
+                    "id INT AUTO_INCREMENT PRIMARY KEY," +
+                    "medecin_id INT NOT NULL," +
+                    "patient_nom VARCHAR(100) NOT NULL," +
+                    "jour VARCHAR(20) NOT NULL," +
+                    "heure VARCHAR(10) NOT NULL," +
+                    "etat VARCHAR(20) DEFAULT 'à venir'," +
+                    "FOREIGN KEY (medecin_id) REFERENCES medecin(id)" +
+                    ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+            try (Statement st = conn.createStatement()) {
+                st.executeUpdate(createTable);
+            }
+            String insert = "INSERT INTO rendezvous (medecin_id, patient_nom, jour, heure) VALUES (?, ?, ?, ?)";
+            try (PreparedStatement stmt = conn.prepareStatement(insert)) {
+                stmt.setInt(1, medecinId);
+                stmt.setString(2, patientNom);
+                stmt.setString(3, jour);
+                stmt.setString(4, heure);
+                stmt.executeUpdate();
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    private void showAlert(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 
     // Getters

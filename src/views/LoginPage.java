@@ -158,10 +158,139 @@ public class LoginPage extends Scene {
 
         // Ajout de l'action de connexion
         loginButton.setOnAction(e -> {
-            if ("AKONGO".equals(username.getText()) && !password.getText().isEmpty()) {
-                stage.setScene(new DoctorInterface(stage));
+            String user = username.getText().trim();
+            String pass = password.getText();
+            if (user.isEmpty() || pass.isEmpty()) {
+                showLoginError(loginButton, "Veuillez remplir tous les champs.");
+                return;
+            }
+            // Connexion à la base pour vérifier l'utilisateur (patient ou medecin)
+            java.sql.Connection conn = null;
+            try {
+                conn = utils.DBConnection.getConnection();
+                // Vérifier d'abord si c'est un médecin
+                String sqlMed = "SELECT * FROM medecin WHERE email = ? OR nom = ?";
+                try (java.sql.PreparedStatement ps = conn.prepareStatement(sqlMed)) {
+                    ps.setString(1, user);
+                    ps.setString(2, user);
+                    try (java.sql.ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            String hashed = rs.getString("motdepasse");
+                            if (hashed != null && hashed.equals(hashPassword(pass))) {
+                                // Créer l'objet Medecin et rediriger
+                                models.Medecin med = new models.Medecin();
+                                med.setId(rs.getInt("id"));
+                                med.setNom(rs.getString("nom"));
+                                med.setPrenom(rs.getString("prenom"));
+                                med.setSpecialite(rs.getString("specialite"));
+                                med.setTelephone(rs.getString("telephone"));
+                                med.setEmail(rs.getString("email"));
+                                // Charger les rendez-vous du médecin
+                                java.util.List<String[]> appointments = new java.util.ArrayList<>();
+                                int nbPatients = 0;
+                                int nbRdv = 0;
+                                int nbUrgences = 0;
+                                String tempsMoyen = "-";
+                                try {
+                                    // Charger les rendez-vous depuis la table rendezvous
+                                    String sqlRdv = "SELECT patient_nom, jour, heure FROM rendezvous WHERE medecin_id = ? ORDER BY jour, heure";
+                                    try (java.sql.PreparedStatement psRdv = conn.prepareStatement(sqlRdv)) {
+                                        psRdv.setInt(1, med.getId());
+                                        try (java.sql.ResultSet rsRdv = psRdv.executeQuery()) {
+                                            while (rsRdv.next()) {
+                                                String patient = rsRdv.getString("patient_nom");
+                                                String jour = rsRdv.getString("jour");
+                                                String heure = rsRdv.getString("heure");
+                                                appointments.add(new String[] { patient, jour, heure });
+                                                nbRdv++;
+                                            }
+                                        }
+                                    }
+                                    // Nombre de patients distincts
+                                    String sqlPatients = "SELECT COUNT(DISTINCT patient_nom) as nb FROM rendezvous WHERE medecin_id = ?";
+                                    try (java.sql.PreparedStatement psPat = conn.prepareStatement(sqlPatients)) {
+                                        psPat.setInt(1, med.getId());
+                                        try (java.sql.ResultSet rsPat = psPat.executeQuery()) {
+                                            if (rsPat.next()) {
+                                                nbPatients = rsPat.getInt("nb");
+                                            }
+                                        }
+                                    }
+                                    // Nombre d'urgences (exemple : état = 'urgence')
+                                    String sqlUrg = "SELECT COUNT(*) as nb FROM rendezvous WHERE medecin_id = ? AND etat = 'urgence'";
+                                    try (java.sql.PreparedStatement psUrg = conn.prepareStatement(sqlUrg)) {
+                                        psUrg.setInt(1, med.getId());
+                                        try (java.sql.ResultSet rsUrg = psUrg.executeQuery()) {
+                                            if (rsUrg.next()) {
+                                                nbUrgences = rsUrg.getInt("nb");
+                                            }
+                                        }
+                                    }
+                                    // Temps moyen (exemple fictif)
+                                    tempsMoyen = "25min";
+                                } catch (Exception ex) {
+                                    // Valeurs par défaut si erreur
+                                }
+                                stage.setScene(new DoctorInterface(stage, med, appointments, nbPatients, nbRdv,
+                                        nbUrgences, tempsMoyen));
+                                return;
+                            } else {
+                                showLoginError(loginButton, "Mot de passe incorrect pour le médecin.");
+                                return;
+                            }
+                        }
+                    }
+                }
+                // Sinon, vérifier si c'est un patient
+                String sqlPat = "SELECT * FROM patient WHERE email = ? OR nom = ?";
+                try (java.sql.PreparedStatement ps = conn.prepareStatement(sqlPat)) {
+                    ps.setString(1, user);
+                    ps.setString(2, user);
+                    try (java.sql.ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            String hashed = rs.getString("motdepasse");
+                            if (hashed != null && hashed.equals(hashPassword(pass))) {
+                                // Créer l'objet Patient et rediriger
+                                models.Patient pat = new models.Patient();
+                                pat.setId(rs.getInt("id"));
+                                pat.setNom(rs.getString("nom"));
+                                pat.setPrenom(rs.getString("prenom"));
+                                pat.setEmail(rs.getString("email"));
+                                // ... autres champs si besoin
+                                stage.setScene(new AppointmentManagement(pat));
+                                return;
+                            } else {
+                                showLoginError(loginButton, "Mot de passe incorrect pour le patient.");
+                                return;
+                            }
+                        }
+                    }
+                }
+                // Aucun utilisateur trouvé
+                showLoginError(loginButton, "Utilisateur non trouvé.");
+            } catch (java.sql.SQLException sqlEx) {
+                System.err.println("❌ ERREUR: Connexion à la base de données impossible : " + sqlEx.getMessage());
+                showLoginError(loginButton,
+                        "Impossible de se connecter à la base de données. Vérifiez votre connexion ou contactez l'administrateur.");
+            } catch (Exception ex) {
+                System.err.println("❌ ERREUR inattendue lors de la connexion : " + ex.getMessage());
+                showLoginError(loginButton, "Erreur inattendue lors de la connexion. Veuillez réessayer.");
+            } finally {
+                if (conn != null) {
+                    try {
+                        conn.close();
+                    } catch (Exception ignore) {
+                    }
+                }
             }
         });
+        // Méthode utilitaire pour le hashage SHA-256 (identique à l'inscription)
+        // (À placer dans la classe LoginPage)
+        // Copié depuis PatientSignUp/MedecinSignUp pour cohérence
+        // (Peut être factorisé dans un utilitaire si besoin)
+        //
+        // Affichage d'une erreur de connexion avec animation
+        // (À placer dans la classe LoginPage)
 
         // Texte et bouton pour inscription
         Label noAccountLabel = new Label("Pas encore de compte ?");
@@ -190,6 +319,63 @@ public class LoginPage extends Scene {
 
         formSection.getChildren().add(loginForm);
         return formSection;
+    }
+
+    // Méthode utilitaire pour le hashage SHA-256 (identique à l'inscription)
+    private String hashPassword(String password) {
+        try {
+            java.security.MessageDigest md = java.security.MessageDigest.getInstance("SHA-256");
+            byte[] hash = md.digest(password.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1)
+                    hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    // Affichage d'une erreur de connexion avec animation
+    private void showLoginError(Button loginButton, String message) {
+        javafx.animation.TranslateTransition shake = new javafx.animation.TranslateTransition(
+                javafx.util.Duration.millis(100), loginButton);
+        shake.setFromX(0);
+        shake.setToX(10);
+        shake.setCycleCount(4);
+        shake.setAutoReverse(true);
+        shake.play();
+
+        loginButton.setStyle(
+                "-fx-background-color: #dc3545; " +
+                        "-fx-text-fill: white; " +
+                        "-fx-font-size: 16px; " +
+                        "-fx-font-weight: bold; " +
+                        "-fx-padding: 15 30 15 30; " +
+                        "-fx-background-radius: 25; " +
+                        "-fx-cursor: hand;");
+
+        javafx.animation.Timeline resetColor = new javafx.animation.Timeline(
+                new javafx.animation.KeyFrame(javafx.util.Duration.seconds(2), ev -> {
+                    loginButton.setStyle(
+                            "-fx-background-color: linear-gradient(to right, #667eea, #764ba2);" +
+                                    "-fx-text-fill: white;" +
+                                    "-fx-background-radius: 25;" +
+                                    "-fx-border-radius: 25;" +
+                                    "-fx-cursor: hand;" +
+                                    "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 8, 0, 0, 2);");
+                }));
+        resetColor.play();
+
+        // Affichage d'une alerte
+        javafx.scene.control.Alert alert = new javafx.scene.control.Alert(javafx.scene.control.Alert.AlertType.ERROR);
+        alert.setTitle("Erreur de connexion");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.show();
     }
 
     private TextField createModernTextField(String placeholder, String icon) {
