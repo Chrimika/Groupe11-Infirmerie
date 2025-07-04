@@ -21,6 +21,7 @@ public class ChoiceInscriptionView extends Scene {
     private static final String DOCTOR_ICON = "/assets/doctor-icon.png";
     private static final String PATIENT_ICON = "/assets/medical-icon.png";
     private final Stage primaryStage;
+    private Stage stage;
 
     public ChoiceInscriptionView(Stage primaryStage) {
         super(new StackPane(), 800, 600);
@@ -57,9 +58,11 @@ public class ChoiceInscriptionView extends Scene {
                         "-fx-font-weight: bold; " +
                         "-fx-padding: 10 20; " +
                         "-fx-background-radius: 5; " +
-                        "-fx-cursor: hand;"
-        );
-        backButton.setOnAction(e -> navigateTo(new LoginPage(), "Connexion"));
+                        "-fx-cursor: hand;");
+        backButton.setOnAction(e -> {
+            // Utiliser la référence au stage pour revenir à LoginPage
+            stage.setScene(new LoginPage(stage));
+        });
 
         VBox mainLayout = new VBox(40, title, choicesBox, backButton);
         mainLayout.setAlignment(Pos.CENTER);
@@ -77,8 +80,10 @@ public class ChoiceInscriptionView extends Scene {
         btn.setMinSize(250, 300);
 
         // Animation de survol
-        btn.setOnMouseEntered(e -> btn.setStyle(btn.getStyle() + "-fx-effect: dropshadow(gaussian, rgba(11,203,149,0.5), 10, 0, 0, 0);"));
-        btn.setOnMouseExited(e -> btn.setStyle(btn.getStyle().replace("-fx-effect: dropshadow(gaussian, rgba(11,203,149,0.5), 10, 0, 0, 0);", "")));
+        btn.setOnMouseEntered(e -> btn
+                .setStyle(btn.getStyle() + "-fx-effect: dropshadow(gaussian, rgba(11,203,149,0.5), 10, 0, 0, 0);"));
+        btn.setOnMouseExited(e -> btn.setStyle(
+                btn.getStyle().replace("-fx-effect: dropshadow(gaussian, rgba(11,203,149,0.5), 10, 0, 0, 0);", "")));
 
         return btn;
     }

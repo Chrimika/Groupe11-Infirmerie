@@ -200,7 +200,7 @@ public class LandingPage extends Scene {
         // Redirection vers LoginPage
         loginBtn.setOnAction(e -> {
             Stage stage = (Stage) getWindow();
-            stage.setScene(new LoginPage());
+            stage.setScene(new LoginPage(stage));
         });
 
         // Animations hover

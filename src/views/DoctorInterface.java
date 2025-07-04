@@ -30,29 +30,50 @@ import javafx.util.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
+import models.Medecin;
+import java.util.List;
+
 public class DoctorInterface extends Scene {
     private Label timeLabel;
     private VBox appointmentsList;
-    private Label statsPatients;
-    private Label statsAppointments;
-    private Label statsEmergency;
+    private Stage stage;
+    private Medecin medecin;
+    private List<String[]> appointments; // [nom, heure, raison, icone, couleur]
+    private int nbPatients;
+    private int nbRdv;
+    private int nbUrgences;
+    private String tempsMoyen;
 
-    public DoctorInterface() {
+    // Nouveau constructeur pour personnalisation
+    public DoctorInterface(Stage stage, Medecin medecin, List<String[]> appointments, int nbPatients, int nbRdv,
+            int nbUrgences, String tempsMoyen) {
         super(new StackPane(), 800, 600);
+        this.stage = stage;
+        this.medecin = medecin;
+        this.appointments = appointments;
+        this.nbPatients = nbPatients;
+        this.nbRdv = nbRdv;
+        this.nbUrgences = nbUrgences;
+        this.tempsMoyen = tempsMoyen;
         StackPane root = (StackPane) getRoot();
-
-        // Fond dégradé
         createGradientBackground(root);
-
-        // Interface principale
         BorderPane mainLayout = createMainLayout();
         root.getChildren().add(mainLayout);
-
-        // Animations d'entrée
         playEntranceAnimations();
-
-        // Horloge temps réel
         startClock();
+    }
+
+    // Ancien constructeur pour compatibilité (données démo)
+    public DoctorInterface(Stage stage) {
+        this(stage,
+                new Medecin(),
+                List.of(
+                        new String[] { "Jean Dupont", "10:00", "Consultation générale", "🩺", "#e3f2fd" },
+                        new String[] { "Marie Curie", "11:30", "Contrôle tension", "❤️", "#f3e5f5" },
+                        new String[] { "Pierre Martin", "14:00", "Vaccination", "💉", "#e8f5e8" },
+                        new String[] { "Sophie Bernard", "15:30", "Consultation pédiatrique", "👶", "#fff3e0" },
+                        new String[] { "Lucas Moreau", "16:45", "Bilan de santé", "📋", "#f1f8e9" }),
+                12, 5, 2, "25min");
     }
 
     private void createGradientBackground(StackPane root) {
@@ -115,17 +136,31 @@ public class DoctorInterface extends Scene {
         headerShadow.setColor(Color.color(0, 0, 0, 0.1));
         headerContainer.setEffect(headerShadow);
 
-        // Avatar docteur
-        Label avatar = new Label("👨‍⚕️");
+        // Avatar docteur (homme/femme selon prénom)
+        String avatarEmoji = "👨‍⚕️";
+        if (medecin != null && medecin.getPrenom() != null && !medecin.getPrenom().isEmpty()) {
+            String prenom = medecin.getPrenom().toLowerCase();
+            if (prenom.endsWith("e") || prenom.equals("marie") || prenom.equals("sophie") || prenom.equals("julie")) {
+                avatarEmoji = "👩‍⚕️";
+            }
+        }
+        Label avatar = new Label(avatarEmoji);
         avatar.setFont(Font.font("Arial", 40));
 
-        // Informations docteur
+        // Informations docteur personnalisées
         VBox doctorInfo = new VBox(5);
-        Label welcome = new Label("Bonjour, Dr. Martin");
+        String nomAffiche = (medecin != null && medecin.getNom() != null && !medecin.getNom().isEmpty())
+                ? medecin.getNom()
+                : "Martin";
+        String prenomAffiche = (medecin != null && medecin.getPrenom() != null) ? medecin.getPrenom() : "";
+        Label welcome = new Label(
+                "Bonjour, Dr. " + nomAffiche + (prenomAffiche.isEmpty() ? "" : (" " + prenomAffiche)));
         welcome.setFont(Font.font("Segoe UI", FontWeight.BOLD, 24));
         welcome.setTextFill(Color.web("#0bcb95"));
 
-        Label specialty = new Label("Médecine Générale");
+        String specialiteAffiche = (medecin != null && medecin.getSpecialite() != null
+                && !medecin.getSpecialite().isEmpty()) ? medecin.getSpecialite() : "Médecine Générale";
+        Label specialty = new Label(specialiteAffiche);
         specialty.setFont(Font.font("Segoe UI", FontWeight.LIGHT, 14));
         specialty.setTextFill(Color.web("#666666"));
 
@@ -206,9 +241,17 @@ public class DoctorInterface extends Scene {
 
         // Liste des rendez-vous
         appointmentsList = new VBox(10);
-
-        // Ajouter des rendez-vous de démonstration
-        addSampleAppointments();
+        if (appointments != null && !appointments.isEmpty()) {
+            for (String[] rdv : appointments) {
+                if (rdv.length >= 5)
+                    appointmentsList.getChildren().add(createAppointmentCard(rdv[0], rdv[1], rdv[2], rdv[3], rdv[4]));
+            }
+        } else {
+            Label noRdv = new Label("Aucun rendez-vous aujourd'hui.");
+            noRdv.setFont(Font.font("Segoe UI", FontWeight.LIGHT, 16));
+            noRdv.setTextFill(Color.web("#888"));
+            appointmentsList.getChildren().add(noRdv);
+        }
 
         // ScrollPane pour la liste
         ScrollPane scrollPane = new ScrollPane(appointmentsList);
@@ -377,10 +420,8 @@ public class DoctorInterface extends Scene {
         // Bouton principal
         Button startConsultationBtn = createModernButton("🩺 Démarrer Consultation", "#0bcb95", true);
         startConsultationBtn.setOnAction(e -> {
-            // Logique pour démarrer une consultation
-            System.out.println("Démarrer consultation...");
-            Stage stage = (Stage) getWindow();
-            stage.setScene(new ConsultationForm());
+            // Utilisation de la référence au Stage
+            stage.setScene(new ConsultationForm(stage)); // Passer le stage si nécessaire
         });
 
         // Boutons secondaires

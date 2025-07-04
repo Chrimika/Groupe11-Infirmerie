@@ -30,7 +30,7 @@ public class LoginPage extends Scene {
     private VBox loginForm;
     private ImageView loginImage;
 
-    public LoginPage() {
+    public LoginPage(Stage stage) {
         super(new StackPane(), 800, 600);
         StackPane root = (StackPane) getRoot();
 
@@ -44,7 +44,7 @@ public class LoginPage extends Scene {
         VBox leftSection = createImageSection();
 
         // Partie droite - Formulaire
-        VBox rightSection = createFormSection();
+        VBox rightSection = createFormSection(stage);
 
         mainContainer.getChildren().addAll(leftSection, rightSection);
         root.getChildren().add(mainContainer);
@@ -132,7 +132,7 @@ public class LoginPage extends Scene {
         return imageSection;
     }
 
-    private VBox createFormSection() {
+    private VBox createFormSection(Stage stage) {
         VBox formSection = new VBox();
         formSection.setAlignment(Pos.CENTER);
         formSection.setPrefSize(450, 550);
@@ -156,6 +156,13 @@ public class LoginPage extends Scene {
         // Bouton de connexion avec animation
         Button loginButton = createModernButton("Se connecter");
 
+        // Ajout de l'action de connexion
+        loginButton.setOnAction(e -> {
+            if ("AKONGO".equals(username.getText()) && !password.getText().isEmpty()) {
+                stage.setScene(new DoctorInterface(stage));
+            }
+        });
+
         // Texte et bouton pour inscription
         Label noAccountLabel = new Label("Pas encore de compte ?");
         noAccountLabel.setFont(Font.font("Segoe UI", FontWeight.LIGHT, 14));
@@ -166,7 +173,6 @@ public class LoginPage extends Scene {
         signUpButton.setTextFill(Color.web("#0bcb95"));
         signUpButton.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
         signUpButton.setOnAction(e -> {
-            Stage stage = (Stage) getWindow();
             stage.setScene(new ChoiceInscriptionView(stage));
         });
 

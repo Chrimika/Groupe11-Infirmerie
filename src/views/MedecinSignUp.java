@@ -595,6 +595,23 @@ public class MedecinSignUp extends Scene {
                         savePlanningToDatabase(medecinId, medecin.getJoursTravail());
                         showSuccessAnimation();
                         showSuccessAlert(medecin);
+                        // Redirection personnalisée vers DoctorInterface
+                        javafx.stage.Window window = submitBtn.getScene().getWindow();
+                        if (window instanceof javafx.stage.Stage) {
+                            javafx.stage.Stage stage = (javafx.stage.Stage) window;
+                            // Données de démonstration pour les rendez-vous et stats (à remplacer par des
+                            // vraies données si disponibles)
+                            java.util.List<String[]> appointments = java.util.List.of(
+                                    new String[] { "Jean Dupont", "10:00", "Consultation générale", "🩺", "#e3f2fd" },
+                                    new String[] { "Marie Curie", "11:30", "Contrôle tension", "❤️", "#f3e5f5" },
+                                    new String[] { "Pierre Martin", "14:00", "Vaccination", "💉", "#e8f5e8" });
+                            int nbPatients = 1; // À remplacer par la vraie stat
+                            int nbRdv = appointments.size();
+                            int nbUrgences = 0;
+                            String tempsMoyen = "-";
+                            stage.setScene(new views.DoctorInterface(stage, medecin, appointments, nbPatients, nbRdv,
+                                    nbUrgences, tempsMoyen));
+                        }
                     } else {
                         showAlert("Erreur", "Échec de l'enregistrement du médecin.");
                     }
