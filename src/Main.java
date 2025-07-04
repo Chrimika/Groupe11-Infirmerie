@@ -8,7 +8,7 @@ public class Main extends Application {
         try {
             // ChoiceInscriptionView est une Scene, on peut l'utiliser directement
             //ChoiceInscriptionView choiceScene = new ChoiceInscriptionView(primaryStage);
-            AppointmentManagement choiceScene = new AppointmentManagement();
+            LandingPage  choiceScene = new LandingPage();
             primaryStage.setScene(choiceScene);
             primaryStage.setTitle("Infirmerie Scolaire");
             primaryStage.show();

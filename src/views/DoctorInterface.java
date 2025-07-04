@@ -396,9 +396,21 @@ public class DoctorInterface extends Scene {
         // Boutons secondaires
         Button emergencyBtn = createModernButton("🚨 Urgence", "#ff6b6b", false);
         Button breakBtn = createModernButton("☕ Pause", "#feca57", false);
-        Button historyBtn = createModernButton("📊 Historique", "#74b9ff", false);
 
-        footer.getChildren().addAll(startConsultationBtn, emergencyBtn, breakBtn, historyBtn);
+        // NOUVEAUX BOUTONS pour vos vues
+        Button historyBtn = createModernButton("📊 Historique Médical", "#74b9ff", false);
+        historyBtn.setOnAction(e -> {
+            Stage stage = (Stage) getWindow();
+            stage.setScene(new MedicalHistory());
+        });
+
+        Button patientMgmtBtn = createModernButton("👥 Gestion Patients", "#a29bfe", false);
+        patientMgmtBtn.setOnAction(e -> {
+            Stage stage = (Stage) getWindow();
+            stage.setScene(new PatientManagement());
+        });
+
+        footer.getChildren().addAll(startConsultationBtn, emergencyBtn, breakBtn, historyBtn, patientMgmtBtn);
 
         return footer;
     }
