@@ -611,12 +611,12 @@ public class PatientSignUp extends Scene {
         success.setCycleCount(2);
         success.play();
 
-        // Redirection après succès
+        // Redirection personnalisée vers la prise de rendez-vous avec le patient
+        // connecté
         Timeline timeline = new Timeline(new KeyFrame(Duration.seconds(1), event -> {
             Stage stage = (Stage) submitBtn.getScene().getWindow();
-            // Rediriger vers la vue de connexion patient existante
-            // stage.setScene(new PatientLoginView(stage));
-            System.out.println("Redirection vers la page de connexion patient");
+            // Rediriger vers AppointmentManagement avec le patient connecté
+            stage.setScene(new AppointmentManagement(createPatient()));
         }));
         timeline.play();
     }

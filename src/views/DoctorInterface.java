@@ -32,10 +32,16 @@ import java.time.format.DateTimeFormatter;
 
 import models.Medecin;
 import java.util.List;
+import java.util.ArrayList;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 
 public class DoctorInterface extends Scene {
     private Label timeLabel;
     private VBox appointmentsList;
+    private VBox consultationsList;
     private Stage stage;
     private Medecin medecin;
     private List<String[]> appointments; // [nom, heure, raison, icone, couleur]
@@ -47,7 +53,7 @@ public class DoctorInterface extends Scene {
     // Nouveau constructeur pour personnalisation
     public DoctorInterface(Stage stage, Medecin medecin, List<String[]> appointments, int nbPatients, int nbRdv,
             int nbUrgences, String tempsMoyen) {
-        super(new StackPane(), 800, 600);
+        super(new StackPane(), 1200, 600);
         this.stage = stage;
         this.medecin = medecin;
         this.appointments = appointments;
@@ -195,17 +201,139 @@ public class DoctorInterface extends Scene {
         centerContent.setAlignment(Pos.TOP_CENTER);
         centerContent.setPadding(new Insets(0, 0, 20, 0));
 
-        // Panel des rendez-vous (70% de la largeur)
+        // Panel des rendez-vous (50% de la largeur)
         VBox appointmentsPanel = createAppointmentsPanel();
-        appointmentsPanel.setPrefWidth(700);
+        appointmentsPanel.setPrefWidth(400);
 
-        // Panel des statistiques (30% de la largeur)
+        // Panel des consultations (30% de la largeur)
+        VBox consultationsPanel = createConsultationsPanel();
+        consultationsPanel.setPrefWidth(400);
+
+        // Panel des statistiques (20% de la largeur)
         VBox statsPanel = createStatsPanel();
         statsPanel.setPrefWidth(280);
 
-        centerContent.getChildren().addAll(appointmentsPanel, statsPanel);
+        centerContent.getChildren().addAll(appointmentsPanel, consultationsPanel, statsPanel);
 
         return centerContent;
+    }
+
+    // Panel pour afficher les consultations récentes
+    private VBox createConsultationsPanel() {
+        VBox panel = new VBox(15);
+        panel.setStyle(
+                "-fx-background-color: rgba(255, 255, 255, 0.95);" +
+                        "-fx-background-radius: 15;" +
+                        "-fx-border-radius: 15;" +
+                        "-fx-border-color: rgba(255, 255, 255, 0.4);" +
+                        "-fx-border-width: 1;");
+        panel.setPadding(new Insets(25));
+
+        // Ombre portée
+        DropShadow panelShadow = new DropShadow();
+        panelShadow.setRadius(20);
+        panelShadow.setOffsetY(8);
+        panelShadow.setColor(Color.color(0, 0, 0, 0.08));
+        panel.setEffect(panelShadow);
+
+        // En-tête du panel
+        HBox panelHeader = new HBox();
+        panelHeader.setAlignment(Pos.CENTER_LEFT);
+        panelHeader.setSpacing(10);
+
+        Label icon = new Label("📝");
+        icon.setFont(Font.font("Arial", 24));
+
+        Label title = new Label("Consultations récentes");
+        title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 20));
+        title.setTextFill(Color.web("#2c3e50"));
+
+        panelHeader.getChildren().addAll(icon, title);
+
+        // Liste des consultations
+        consultationsList = new VBox(10);
+        List<String[]> consultations = loadConsultationsFromDatabase();
+        if (consultations != null && !consultations.isEmpty()) {
+            for (String[] c : consultations) {
+                // c[0]=patient, c[1]=date, c[2]=type, c[3]=diagnostic, c[4]=traitement
+                consultationsList.getChildren().add(createConsultationCard(c[0], c[1], c[2], c[3], c[4]));
+            }
+        } else {
+            Label noConsult = new Label("Aucune consultation enregistrée.");
+            noConsult.setFont(Font.font("Segoe UI", FontWeight.LIGHT, 16));
+            noConsult.setTextFill(Color.web("#888"));
+            consultationsList.getChildren().add(noConsult);
+        }
+
+        ScrollPane scrollPane = new ScrollPane(consultationsList);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+        scrollPane.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        scrollPane.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        scrollPane.setPrefHeight(300);
+
+        panel.getChildren().addAll(panelHeader, scrollPane);
+        return panel;
+    }
+
+    // Charge les consultations depuis la base de données
+    private List<String[]> loadConsultationsFromDatabase() {
+        List<String[]> consultations = new ArrayList<>();
+        try (Connection conn = utils.DBConnection.getConnection()) {
+            String sql = "SELECT c.date_consultation, c.type, c.diagnostic, c.traitement, p.nom, p.prenom FROM consultation c LEFT JOIN patient p ON c.patient_id = p.id ORDER BY c.date_consultation DESC LIMIT 10";
+            try (PreparedStatement stmt = conn.prepareStatement(sql)) {
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        String patient = rs.getString("nom") + " " + rs.getString("prenom");
+                        String date = (rs.getDate("date_consultation") != null)
+                                ? rs.getDate("date_consultation").toString()
+                                : "";
+                        String type = rs.getString("type");
+                        String diagnostic = rs.getString("diagnostic");
+                        String traitement = rs.getString("traitement");
+                        consultations.add(new String[] { patient, date, type, diagnostic, traitement });
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return consultations;
+    }
+
+    // Carte d'affichage pour une consultation
+    private HBox createConsultationCard(String patient, String date, String type, String diagnostic,
+            String traitement) {
+        HBox card = new HBox(10);
+        card.setAlignment(Pos.CENTER_LEFT);
+        card.setPadding(new Insets(10));
+        card.setStyle(
+                "-fx-background-color: #f8f9fa;" +
+                        "-fx-background-radius: 8;" +
+                        "-fx-border-radius: 8;" +
+                        "-fx-border-color: #e0e0e0;" +
+                        "-fx-border-width: 1;");
+
+        VBox info = new VBox(2);
+        Label patientLabel = new Label(patient);
+        patientLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
+        patientLabel.setTextFill(Color.web("#0bcb95"));
+
+        Label dateLabel = new Label(date + " | " + type);
+        dateLabel.setFont(Font.font("Segoe UI", FontWeight.LIGHT, 12));
+        dateLabel.setTextFill(Color.web("#666666"));
+
+        Label diagLabel = new Label("Diagnostic: " + diagnostic);
+        diagLabel.setFont(Font.font("Segoe UI", 12));
+        diagLabel.setTextFill(Color.web("#2c3e50"));
+
+        Label trtLabel = new Label("Traitement: " + traitement);
+        trtLabel.setFont(Font.font("Segoe UI", 12));
+        trtLabel.setTextFill(Color.web("#2c3e50"));
+
+        info.getChildren().addAll(patientLabel, dateLabel, diagLabel, trtLabel);
+        card.getChildren().add(info);
+        return card;
     }
 
     private VBox createAppointmentsPanel() {
@@ -239,12 +367,13 @@ public class DoctorInterface extends Scene {
 
         panelHeader.getChildren().addAll(calendarIcon, title);
 
-        // Liste des rendez-vous
+        // Liste des rendez-vous depuis la base
         appointmentsList = new VBox(10);
-        if (appointments != null && !appointments.isEmpty()) {
-            for (String[] rdv : appointments) {
-                if (rdv.length >= 5)
-                    appointmentsList.getChildren().add(createAppointmentCard(rdv[0], rdv[1], rdv[2], rdv[3], rdv[4]));
+        List<String[]> rdvs = loadRendezVousFromDatabase();
+        if (rdvs != null && !rdvs.isEmpty()) {
+            for (String[] rdv : rdvs) {
+                // rdv[0]=patient, rdv[1]=jour, rdv[2]=heure
+                appointmentsList.getChildren().add(createAppointmentCard(rdv[0], rdv[2], "", "🩺", "#e3f2fd"));
             }
         } else {
             Label noRdv = new Label("Aucun rendez-vous aujourd'hui.");
@@ -264,6 +393,42 @@ public class DoctorInterface extends Scene {
         panel.getChildren().addAll(panelHeader, scrollPane);
 
         return panel;
+    }
+
+    // Charge les rendez-vous du médecin connecté depuis la base
+    private List<String[]> loadRendezVousFromDatabase() {
+        List<String[]> rdvs = new ArrayList<>();
+        try (Connection conn = utils.DBConnection.getConnection()) {
+            // On suppose que le medecin est connecté et a un id
+            int medecinId = (medecin != null && medecin.getId() > 0) ? medecin.getId() : 1; // fallback id=1
+            String sql = "CREATE TABLE IF NOT EXISTS rendezvous (" +
+                    "id INT AUTO_INCREMENT PRIMARY KEY," +
+                    "medecin_id INT NOT NULL," +
+                    "patient_nom VARCHAR(100) NOT NULL," +
+                    "jour VARCHAR(20) NOT NULL," +
+                    "heure VARCHAR(10) NOT NULL," +
+                    "etat VARCHAR(20) DEFAULT 'à venir'," +
+                    "FOREIGN KEY (medecin_id) REFERENCES medecin(id)" +
+                    ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;";
+            try (Statement st = conn.createStatement()) {
+                st.executeUpdate(sql);
+            }
+            String select = "SELECT patient_nom, jour, heure FROM rendezvous WHERE medecin_id = ? ORDER BY jour, heure";
+            try (PreparedStatement stmt = conn.prepareStatement(select)) {
+                stmt.setInt(1, medecinId);
+                try (ResultSet rs = stmt.executeQuery()) {
+                    while (rs.next()) {
+                        String patient = rs.getString("patient_nom");
+                        String jour = rs.getString("jour");
+                        String heure = rs.getString("heure");
+                        rdvs.add(new String[] { patient, jour, heure });
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+        return rdvs;
     }
 
     private void addSampleAppointments() {

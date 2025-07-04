@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import models.Patient;
+
 public class AppointmentManagement extends Scene {
 
     private ComboBox<String> medecinComboBox;
@@ -30,11 +32,20 @@ public class AppointmentManagement extends Scene {
     private Label selectedMedecinInfo;
     private Label selectedDateTimeInfo;
 
-    // Données simulées des médecins et leurs disponibilités
-    private Map<String, Map<String, List<String>>> disponibilitesMedecins;
+    // Données simulées des médecins et leurs disponibilités (pour compatibilité)
+    private Map<String, Map<String, List<String>>> disponibilitesMedecins = new HashMap<>();
 
+    private Patient currentPatient = null;
+
+    // Constructeur par défaut (mode classique)
     public AppointmentManagement() {
+        this(null);
+    }
+
+    // Nouveau constructeur pour personnalisation avec Patient
+    public AppointmentManagement(Patient patient) {
         super(new BorderPane(), 800, 600);
+        this.currentPatient = patient;
 
         initializeData();
 
@@ -160,12 +171,29 @@ public class AppointmentManagement extends Scene {
         patientComboBox
                 .setStyle("-fx-font-size: 14px; -fx-background-radius: 8; -fx-border-radius: 8; -fx-padding: 8;");
 
-        patientComboBox.getItems().addAll(
-                "Jean Dupont (15 ans) - Classe: 3èmeA",
-                "Marie Martin (14 ans) - Classe: 4èmeB",
-                "Pierre Durand (16 ans) - Classe: 2ndeC",
-                "Sophie Moreau (13 ans) - Classe: 5èmeA",
-                "Antoine Petit (17 ans) - Classe: 1èreS");
+        if (currentPatient != null) {
+            // Affichage personnalisé pour le patient connecté
+            String display = currentPatient.getNom() + " " + currentPatient.getPrenom();
+            if (currentPatient.getDateNaissance() != null) {
+                int age = java.time.Period.between(currentPatient.getDateNaissance(), java.time.LocalDate.now())
+                        .getYears();
+                display += " (" + age + " ans)";
+            }
+            if (currentPatient.getNumeroDossier() != null && !currentPatient.getNumeroDossier().isEmpty()) {
+                display += " - Dossier: " + currentPatient.getNumeroDossier();
+            }
+            patientComboBox.getItems().add(display);
+            patientComboBox.getSelectionModel().select(0);
+            patientComboBox.setDisable(true); // Non modifiable
+        } else {
+            // Mode classique : liste fictive
+            patientComboBox.getItems().addAll(
+                    "Jean Dupont (15 ans) - Classe: 3èmeA",
+                    "Marie Martin (14 ans) - Classe: 4èmeB",
+                    "Pierre Durand (16 ans) - Classe: 2ndeC",
+                    "Sophie Moreau (13 ans) - Classe: 5èmeA",
+                    "Antoine Petit (17 ans) - Classe: 1èreS");
+        }
 
         section.getChildren().addAll(sectionTitle, patientLabel, patientComboBox);
         return section;
